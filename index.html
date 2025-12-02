@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KAUÃ_OS // ULTIMATE_V11</title>
+    <title>KAUÃ_OS // V13_ULTIMATE</title>
     
     <!-- Bibliotecas Externas -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 
     <style>
         /* --- TEMAS (CSS Variables) --- */
@@ -21,6 +21,7 @@
             --text: #e0e0e0;
             --danger: #ef4444;
             --warning: #f59e0b;
+            --ai-color: #8b5cf6;
         }
 
         /* Classes de Tema */
@@ -47,13 +48,34 @@
             background-size: 100% 2px, 3px 100%; pointer-events: none; z-index: 10; opacity: 0.15;
         }
 
-        /* --- ANIMATIONS --- */
-        .power-off { opacity: 0; transform: scale(0.98); filter: brightness(0); pointer-events: none; }
+        /* --- ANIMATIONS (Power On Effect) --- */
+        .power-off { opacity: 0; filter: brightness(0) blur(2px); pointer-events: none; }
+        
         .power-on { 
-            opacity: 1; transform: scale(1); filter: brightness(1); pointer-events: all;
-            transition: opacity 0.4s ease-out, transform 0.4s ease-out, filter 0.6s;
-            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            opacity: 1; filter: brightness(1) blur(0); pointer-events: all;
+            animation: powerOnFlicker 0.5s ease-out forwards;
+            box-shadow: 0 0 15px rgba(0,0,0,0.3);
         }
+
+        @keyframes powerOnFlicker {
+            0% { opacity: 0; }
+            10% { opacity: 0.4; }
+            20% { opacity: 0.1; }
+            40% { opacity: 0.8; }
+            60% { opacity: 0.2; }
+            70% { opacity: 0.9; }
+            80% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* --- NOTIFICATION TOAST --- */
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 500; display: flex; flex-direction: column; gap: 10px; }
+        .toast {
+            background: #111; border: 1px solid var(--accent); color: white; padding: 10px 20px;
+            font-size: 12px; border-radius: 4px; box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            animation: slideIn 0.3s ease-out; display: flex; align-items: center; gap: 10px;
+        }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
         /* --- MODALS --- */
         .modal-overlay {
@@ -94,7 +116,7 @@
         }
 
         .canvas-header {
-            height: 45px; border-bottom: 1px solid var(--border); background: var(--panel);
+            height: 50px; border-bottom: 1px solid var(--border); background: var(--panel);
             display: flex; align-items: center; justify-content: space-between; padding: 0 15px;
         }
 
@@ -116,15 +138,27 @@
         }
         .preview-pane {
             flex: 1; display: flex; flex-direction: column;
-            background: #ffffff; position: relative;
+            background: #ffffff; position: relative; transition: all 0.3s ease;
         }
+        
+        /* FULLSCREEN PREVIEW MODE */
+        .preview-pane.fullscreen {
+            position: fixed; inset: 0; z-index: 200; width: 100% !important; height: 100% !important;
+        }
+        .fullscreen-exit-btn {
+            display: none; position: absolute; top: 10px; right: 10px; z-index: 210;
+            background: red; color: white; border: none; padding: 5px 10px; cursor: pointer; font-weight: bold;
+        }
+        .preview-pane.fullscreen .fullscreen-exit-btn { display: block; }
+
         /* Error Overlay in Preview */
         #error-overlay {
-            position: absolute; bottom: 0; left: 0; width: 100%; max-height: 50%;
-            background: rgba(40,0,0,0.95); border-top: 2px solid var(--danger);
-            color: white; padding: 15px; overflow-y: auto; font-family: monospace; font-size: 12px;
+            position: absolute; bottom: 0; left: 0; width: 100%; max-height: 40%;
+            background: rgba(20,0,0,0.95); border-top: 2px solid var(--danger);
+            color: white; padding: 10px; overflow-y: auto; font-family: monospace; font-size: 12px;
             display: none; z-index: 20;
         }
+        .error-title { color: var(--danger); font-weight: bold; margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
 
         #editor-area {
             flex: 1; background: transparent; color: #d4d4d4; border: none; outline: none;
@@ -162,6 +196,12 @@
         .btn:hover { border-color: var(--accent); color: white; }
         .btn-primary { background: var(--accent); color: black; font-weight: bold; border: none; }
         .btn-primary:hover { opacity: 0.8; }
+        
+        .btn-ai { border-color: var(--ai-color); color: var(--ai-color); }
+        .btn-ai:hover { background: var(--ai-color); color: white; box-shadow: 0 0 10px var(--ai-color); }
+
+        .btn-share { border-color: #3b82f6; color: #3b82f6; }
+        .btn-share:hover { background: #3b82f6; color: white; }
 
         /* Term & Keys */
         #term-out { flex: 1; padding: 10px; overflow-y: auto; color: #ccc; font-size: 13px; }
@@ -182,10 +222,11 @@
 <body class="theme-matrix">
 
     <div class="scanlines"></div>
+    <div id="toast-container"></div>
 
     <!-- START SCREEN -->
     <div id="start-overlay" onclick="OS.boot()">
-        <div class="text-4xl font-bold text-white mb-2 tracking-tighter">KAUÃ_OS <span class="text-xs bg-white text-black px-1 rounded">ULTIMATE</span></div>
+        <div class="text-4xl font-bold text-white mb-2 tracking-tighter">KAUÃ_OS <span class="text-xs bg-white text-black px-1 rounded">V13</span></div>
         <div class="text-xs text-gray-500 blink-text">CLIQUE PARA INICIAR SISTEMA</div>
         <div class="loader-bar"><div class="loader-fill" id="boot-fill"></div></div>
     </div>
@@ -235,25 +276,37 @@
             </div>
             
             <div class="flex items-center gap-2">
+                <button class="btn btn-ai" onclick="AI.fixCode()">
+                    <i data-lucide="sparkles" class="w-3 h-3"></i> <span class="hidden md:inline">CORRIGIR (AI)</span>
+                </button>
+                <button class="btn btn-share" onclick="FS.shareLink()">
+                    <i data-lucide="share-2" class="w-3 h-3"></i>
+                </button>
+                <div class="w-px h-4 bg-gray-700 mx-1"></div>
                 <button class="btn btn-primary" onclick="Canvas.run()">
                     <i data-lucide="play" class="w-3 h-3"></i> <span class="hidden md:inline">RODAR</span>
                 </button>
-                <button class="btn" onclick="Canvas.close()">FECHAR</button>
+                <button class="btn" onclick="Canvas.toggleFullscreenPreview()" title="Expandir Preview">
+                    <i data-lucide="maximize" class="w-3 h-3"></i>
+                </button>
+                <button class="btn" onclick="Canvas.close()">X</button>
             </div>
         </div>
 
         <div class="canvas-body">
             <div class="code-pane">
-                <textarea id="editor-area" spellcheck="false" placeholder="// Code here..."></textarea>
+                <textarea id="editor-area" spellcheck="false" placeholder="// Escreva seu código aqui..."></textarea>
             </div>
-            <div class="preview-pane">
+            <div class="preview-pane" id="preview-container">
+                <button class="fullscreen-exit-btn" onclick="Canvas.toggleFullscreenPreview()">SAIR DA TELA CHEIA</button>
                 <iframe id="web-preview" class="w-full h-full border-none bg-white"></iframe>
                 <div id="console-preview" class="w-full h-full p-4 font-mono text-sm overflow-auto text-[var(--accent)] hidden bg-[#050505]"></div>
                 
                 <!-- Error Overlay -->
                 <div id="error-overlay">
-                    <div class="font-bold mb-1">ERRO DETECTADO:</div>
-                    <div id="error-msg" class="text-gray-300"></div>
+                    <div class="error-title"><i data-lucide="alert-triangle" class="w-4 h-4"></i> ERRO DETECTADO:</div>
+                    <div id="error-msg" class="text-gray-300 mb-2"></div>
+                    <button class="btn btn-ai w-full justify-center" onclick="AI.fixCode()">TENTAR CORREÇÃO AUTOMÁTICA</button>
                 </div>
             </div>
         </div>
@@ -265,7 +318,7 @@
         <div class="panel power-off" id="p-header" style="grid-column: 1 / -1; grid-row: 1;">
             <div class="flex items-center justify-between h-full px-4">
                 <div class="font-bold text-lg flex gap-2 items-center">
-                    KAUÃ_OS <span class="text-[10px] border border-[var(--accent)] px-1 rounded text-[var(--accent)]">V11</span>
+                    KAUÃ_OS <span class="text-[10px] border border-[var(--accent)] px-1 rounded text-[var(--accent)]">V13</span>
                 </div>
                 <div class="flex gap-4 items-center">
                     <button onclick="UI.openModal('modal-settings')" class="text-[10px] hover:text-[var(--accent)] transition">OPÇÕES</button>
@@ -282,6 +335,7 @@
                 <div class="text-xs text-gray-400">CPU: <span id="cpu-val" style="color:var(--accent)">12%</span></div>
                 <div class="mt-auto border-t border-[var(--border)] pt-2">
                     <div class="text-[10px] text-gray-500">CACHE: <span class="text-green-500">ATIVO</span></div>
+                    <div class="text-[10px] text-gray-500">AI ENGINE: <span class="text-purple-500">READY</span></div>
                 </div>
             </div>
         </div>
@@ -345,17 +399,95 @@
                     osc.frequency.linearRampToValueAtTime(600, now + 0.3);
                     gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.5);
                     osc.start(now); osc.stop(now + 0.5);
+                } else if (type === 'error') {
+                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.linearRampToValueAtTime(100, now + 0.2);
+                    gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.2);
+                    osc.start(now); osc.stop(now + 0.2);
                 }
             }
         };
 
-        // --- FILE SYSTEM (PERSISTENT) ---
+        // --- AI ENGINE V2 (Logic Fixer) ---
+        const AI = {
+            fixCode() {
+                const editor = document.getElementById('editor-area');
+                let code = editor.value;
+                let original = code;
+                let fixes = [];
+
+                // 1. HTML Stack Checker
+                if (Canvas.activeTab.endsWith('.html')) {
+                    // Check for unclosed tags logic
+                    const tags = [];
+                    const matches = code.matchAll(/<\/?([a-z]+)[^>]*>/gi);
+                    for (const m of matches) {
+                        if(m[0].startsWith('</')) {
+                            // Closing tag
+                            if(tags.length > 0) tags.pop(); // Simplistic stack pop
+                        } else if(!m[0].endsWith('/>') && !['<br>', '<hr>', '<img>', '<input>', '<meta>', '<link>'].includes(m[0].toLowerCase())) {
+                            tags.push(m[1]);
+                        }
+                    }
+                    
+                    if (tags.length > 0) {
+                        // Close remaining tags
+                        while(tags.length > 0) {
+                            const t = tags.pop();
+                            code += `\n</${t}>`;
+                            fixes.push(`Fechada tag <${t}>`);
+                        }
+                    }
+
+                    // Script tag safety
+                    if (code.includes('<script') && !code.includes('<' + '/script>')) {
+                        code += '\n<' + '/script>';
+                        fixes.push("Script fechado");
+                    }
+                }
+                
+                // 2. JS Checker
+                if (Canvas.activeTab.endsWith('.js')) {
+                    if (code.includes('console.print')) {
+                        code = code.replace(/console\.print/g, 'console.log');
+                        fixes.push("console.print -> console.log");
+                    }
+                    // Check balanced braces count
+                    const open = (code.match(/{/g) || []).length;
+                    const close = (code.match(/}/g) || []).length;
+                    if(open > close) {
+                        code += '\n' + '}'.repeat(open - close);
+                        fixes.push("Fechadas chaves }");
+                    }
+                }
+
+                // 3. Python Fixer
+                if (Canvas.activeTab.endsWith('.py')) {
+                    if (code.match(/print\s+".*"/)) {
+                        code = code.replace(/print\s+"(.*)"/g, 'print("$1")');
+                        fixes.push("Sintaxe print Python 3");
+                    }
+                }
+
+                if (code !== original) {
+                    editor.value = code;
+                    Canvas.run();
+                    UI.toast("AI: " + fixes.join(", "), "success");
+                } else {
+                    UI.toast("AI: Código parece íntegro.", "info");
+                }
+            }
+        };
+
+        // --- FILE SYSTEM ---
         const FS = {
             files: {},
             init() {
-                const saved = localStorage.getItem('kaua_os_files');
-                if(saved) this.files = JSON.parse(saved);
-                else this.reset();
+                try {
+                    const saved = localStorage.getItem('kaua_os_files');
+                    if(saved) this.files = JSON.parse(saved);
+                    else this.reset();
+                } catch(e) { this.reset(); }
             },
             save() {
                 localStorage.setItem('kaua_os_files', JSON.stringify(this.files));
@@ -363,8 +495,8 @@
             },
             reset() {
                 this.files = {
-                    'index.html': { type: 'web', content: '<!-- WebContainer Simulado -->\n<h1>Olá Mundo!</h1>\n<script>\n  console.log("Sistema pronto.");\n<\/script>' },
-                    'notes.txt': { type: 'text', content: 'Ideias de Projeto:\n1. Dominar o mundo.\n2. Aprender React.' }
+                    'index.html': { type: 'web', content: '<!-- WebContainer Simulado -->\n<h1>Olá Mundo!</h1>\n<script>\n  console.log("Sistema pronto.");\n<' + '/script>' },
+                    'notes.txt': { type: 'text', content: 'Tarefas:\n1. Criar site.\n2. Validar código.' }
                 };
                 this.save();
             },
@@ -374,17 +506,22 @@
             },
             exportZip() {
                 const zip = new JSZip();
-                Object.keys(this.files).forEach(name => {
-                    zip.file(name, this.files[name].content);
-                });
+                Object.keys(this.files).forEach(name => zip.file(name, this.files[name].content));
                 zip.generateAsync({type:"blob"}).then(function(content) {
                     const link = document.createElement('a');
                     link.href = URL.createObjectURL(content);
                     link.download = "projeto_kaua_os.zip";
                     link.click();
                 });
-                Term.print("Download do ZIP iniciado.", "text-green-500");
-                UI.closeModal('modal-settings');
+                UI.toast("Download do ZIP iniciado.", "success");
+            },
+            shareLink() {
+                const url = "https://kaua-os.dev/share/" + Math.random().toString(36).substring(7);
+                navigator.clipboard.writeText(url).then(() => {
+                    UI.toast("Link copiado!", "success");
+                }).catch(() => {
+                    UI.toast("Link: " + url, "info");
+                });
             }
         };
 
@@ -394,6 +531,7 @@
             editor: document.getElementById('editor-area'),
             webFrame: document.getElementById('web-preview'),
             consoleFrame: document.getElementById('console-preview'),
+            previewContainer: document.getElementById('preview-container'),
             errorOverlay: document.getElementById('error-overlay'),
             
             openTabs: [],
@@ -438,7 +576,7 @@
                 if(file.type === 'web' || this.activeTab.endsWith('.html')) {
                     this.webFrame.style.display = 'block';
                     this.consoleFrame.style.display = 'none';
-                    this.runWeb(true); // Preview silent
+                    this.runWeb(true); 
                 } else {
                     this.webFrame.style.display = 'none';
                     this.consoleFrame.style.display = 'block';
@@ -467,28 +605,28 @@
 
             runWeb(silent = false) {
                 const code = this.editor.value;
-                // Basic Error Check
-                if(code.includes('<div') && !code.includes('</div>')) {
-                    if(!silent) this.showError("Syntax Error: Tag <div> não foi fechada.");
+                // Pre-check for fatal HTML errors manually first
+                if(code.includes('<script') && !code.includes('<' + '/script>')) {
+                    if(!silent) this.showError("Syntax Error: Tag Script aberta mas não fechada.");
                     return;
                 }
-                
+
                 const frameDoc = this.webFrame.contentWindow.document;
                 frameDoc.open();
-                // Inject Error Catcher in Iframe
-                frameDoc.write(`<script>window.onerror = function(msg, url, line) { window.parent.postMessage({type:'error', msg: msg + ' (Linha ' + line + ')'}, '*'); }<\/script>` + code);
+                // Inject Error Catcher in Iframe safely
+                const safeScript = `<script>window.onerror = function(msg, url, line) { window.parent.postMessage({type:'error', msg: msg + ' (Linha ' + line + ')'}, '*'); }<` + `/script>`;
+                frameDoc.write(safeScript + code);
                 frameDoc.close();
             },
 
             runJS(code) {
                 this.consoleFrame.innerHTML = "";
-                // Loop Guard
                 const safeCode = this.injectLoopGuard(code);
                 try {
                     const log = (msg) => this.consoleFrame.innerHTML += `<div class="text-green-400">> ${msg}</div>`;
-                    // Mock Console
                     const console = { log: log, error: (m)=>this.showError(m) };
-                    eval(safeCode);
+                    // Wrap inside anonymous function to avoid global scope pollution
+                    new Function('console', safeCode)(console);
                 } catch(e) {
                     this.showError(e.message);
                 }
@@ -499,7 +637,6 @@
                 const lines = code.split('\n');
                 let foundOutput = false;
                 lines.forEach((line, i) => {
-                    // Python/Java Mocking
                     let out = null;
                     if(line.match(/print\((.*)\)/)) out = line.match(/print\((.*)\)/)[1];
                     else if(line.match(/System.out.println\((.*)\)/)) out = line.match(/System.out.println\((.*)\)/)[1];
@@ -515,18 +652,20 @@
             },
 
             injectLoopGuard(code) {
-                // Simplistic loop guard to prevent browser crash
                 return `let _loopLimit = 1000; ${code.replace(/while\s*\((.*?)\)/g, 'while($1 && _loopLimit-- > 0)').replace(/for\s*\((.*?)\)/g, 'for($1) if(_loopLimit-- <= 0) break;')}`;
             },
 
             showError(msg) {
                 this.errorOverlay.style.display = 'block';
                 document.getElementById('error-msg').innerText = msg;
-                AudioSys.play('type');
+                AudioSys.play('error');
+            },
+
+            toggleFullscreenPreview() {
+                this.previewContainer.classList.toggle('fullscreen');
             }
         };
 
-        // Listen for Iframe Errors
         window.addEventListener('message', (e) => {
             if(e.data.type === 'error') Canvas.showError(e.data.msg);
         });
@@ -549,20 +688,21 @@
 
             startHouseLights() {
                 const panels = ['p-header', 'p-left', 'p-center', 'p-right', 'p-files', 'p-keyboard'];
+                // Staggered boot
                 panels.forEach((id, idx) => {
                     setTimeout(() => {
                         const el = document.getElementById(id);
                         el.classList.remove('power-off');
                         el.classList.add('power-on');
                         AudioSys.play('type');
-                    }, idx * 200);
+                    }, idx * 300); // Slower, more cinematic
                 });
                 
                 setTimeout(() => {
                     FS.init();
                     UI.init();
-                    Term.print("KAUÃ_OS V11 ONLINE.", "text-green-500");
-                }, 1500);
+                    Term.print("KAUÃ_OS V13 ONLINE.", "text-green-500");
+                }, 2000);
             },
 
             createFile(ext) {
@@ -584,7 +724,6 @@
                 this.renderFiles();
                 this.renderKeys();
                 this.startGlobe();
-                // Load Theme
                 const t = localStorage.getItem('kaua_theme');
                 if(t) document.body.className = t;
             },
@@ -612,7 +751,14 @@
                     row.split('').forEach(char => {
                         const key = document.createElement('div');
                         key.className = "key flex-1 h-8"; key.innerText = char; key.dataset.key = char;
-                        key.onmousedown = () => { document.getElementById('cmd-input').value += char; AudioSys.play('type'); };
+                        // Corrected Mouse Event
+                        key.onmousedown = () => { 
+                            const inp = document.getElementById('cmd-input');
+                            inp.value += char; inp.focus();
+                            AudioSys.play('type');
+                            key.classList.add('active');
+                            setTimeout(()=>key.classList.remove('active'), 100);
+                        };
                         r.appendChild(key);
                     });
                     k.appendChild(r);
@@ -645,6 +791,17 @@
                 document.body.className = name; 
                 localStorage.setItem('kaua_theme', name);
                 this.closeModal('modal-settings');
+            },
+            
+            toast(msg, type='info') {
+                const c = document.getElementById('toast-container');
+                const t = document.createElement('div');
+                t.className = 'toast';
+                const icon = type === 'success' ? 'check' : 'info';
+                t.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4"></i> ${msg}`;
+                c.appendChild(t);
+                lucide.createIcons();
+                setTimeout(() => t.remove(), 3000);
             }
         };
 
