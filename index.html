@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KAUÃ_OS</title>
+    <title>KAUÃ_OS // V25_FINAL</title>
     
     <!-- PWA META TAGS -->
     <meta name="theme-color" content="#000000">
@@ -21,11 +21,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 
-    <!-- PWA AUTO-INJECTOR (SAFE MODE) -->
+    <!-- PWA AUTO-INJECTOR -->
     <script>
         (function() {
             try {
-                // 1. Ícones Dinâmicos
                 const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="#000"/><path d="M64 128l128 128-128 128M256 384h192" stroke="#00ff41" stroke-width="60" stroke-linecap="round" fill="none"/></svg>`;
                 const iconUrl = "data:image/svg+xml;base64," + btoa(iconSvg);
                 const fav = document.getElementById('favicon');
@@ -33,7 +32,6 @@
                 if(fav) fav.href = iconUrl;
                 if(apple) apple.href = iconUrl;
 
-                // 2. Manifesto Dinâmico
                 const manifest = {
                     "name": "Kauã OS Ultimate", "short_name": "KauãOS", "start_url": ".", "display": "standalone",
                     "background_color": "#000000", "theme_color": "#000000", "orientation": "portrait",
@@ -44,53 +42,38 @@
                 link.rel = 'manifest'; link.href = URL.createObjectURL(blob);
                 document.head.appendChild(link);
 
-                // 3. Service Worker (Com Verificação de Erro Blob)
                 if ('serviceWorker' in navigator) {
-                    // Só tenta registrar se não for blob/data (evita o erro no console)
                     if (window.location.protocol !== 'blob:' && window.location.protocol !== 'data:') {
                         const swCode = "self.addEventListener('install', (e) => self.skipWaiting()); self.addEventListener('fetch', (e) => {});";
                         const swUrl = URL.createObjectURL(new Blob([swCode], {type: 'application/javascript'}));
-                        navigator.serviceWorker.register(swUrl).catch(e => console.log('SW Info: Registro ignorado em ambiente restrito.'));
-                    } else {
-                        console.log('PWA: Modo Preview detectado (SW desativado para evitar erros).');
+                        navigator.serviceWorker.register(swUrl).catch(e => console.log('SW Info: Ambiente restrito.'));
                     }
                 }
-            } catch(e) {
-                console.warn("PWA Injector Warning:", e);
-            }
+            } catch(e) { console.warn("PWA Warning:", e); }
         })();
     </script>
 
     <style>
-        /* --- CORE STYLES --- */
-        :root {
-            --bg: #050505; --panel: #0a0a0a; --border: #333; --accent: #00ff41; --text: #e0e0e0;
-            --danger: #ef4444; --warning: #f59e0b; --ai-color: #8b5cf6;
-        }
+        /* --- STYLES --- */
+        :root { --bg: #050505; --panel: #0a0a0a; --border: #333; --accent: #00ff41; --text: #e0e0e0; --danger: #ef4444; --ai-color: #8b5cf6; }
         body.theme-matrix { --bg: #000; --panel: #020a02; --border: #003300; --accent: #00ff41; }
         body.theme-cyber { --bg: #050510; --panel: #0a0a1a; --border: #003366; --accent: #00f3ff; }
         body.theme-dracula { --bg: #282a36; --panel: #44475a; --border: #6272a4; --accent: #ff79c6; }
         body.theme-fire { --bg: #1a0500; --panel: #2a0a00; --border: #661a00; --accent: #ff4500; }
-        body.theme-amber { --bg: #1a1200; --panel: #261a00; --border: #664d00; --accent: #ffb000; }
-        body.theme-ocean { --bg: #001a1a; --panel: #002b2b; --border: #004d4d; --accent: #00e5ff; }
-
+        
         * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg); color: var(--text); font-family: 'Share Tech Mono', monospace; height: 100vh; width: 100vw; overflow: hidden; margin: 0; display: flex; justify-content: center; align-items: center; transition: background 0.5s, color 0.5s; }
+        body { background-color: var(--bg); color: var(--text); font-family: 'Share Tech Mono', monospace; height: 100vh; width: 100vw; overflow: hidden; margin: 0; display: flex; justify-content: center; align-items: center; transition: background 0.5s; }
 
-        /* FX */
-        .scanlines { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06)); background-size: 100% 2px, 3px 100%; pointer-events: none; z-index: 10; opacity: 0.15; }
+        .scanlines { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.25) 50%), linear-gradient(90deg, rgba(255,0,0,0.06), rgba(0,255,0,0.02), rgba(0,0,255,0.06)); background-size: 100% 2px, 3px 100%; pointer-events: none; z-index: 10; opacity: 0.15; }
         .power-off { opacity: 0; filter: brightness(0) blur(4px); pointer-events: none; display: none; }
         .power-on { opacity: 1; filter: brightness(1) blur(0); pointer-events: all; display: flex; animation: turnOn 0.6s ease-out forwards; box-shadow: 0 0 15px rgba(0,0,0,0.3); }
-        @keyframes turnOn { 0% { opacity: 0; transform: scaleY(0.01) scaleX(0); } 50% { opacity: 1; transform: scaleY(0.01) scaleX(1); } 100% { opacity: 1; transform: scaleY(1) scaleX(1); } }
-        #crt-overlay { position: fixed; inset: 0; background: #000; z-index: 350; display: none; pointer-events: none; }
-        .crt-flash { width: 100%; height: 100%; background: white; opacity: 0; animation: flash 0.2s ease-out; }
-        @keyframes flash { 0% { opacity: 0.8; } 100% { opacity: 0; } }
-
-        /* UI */
-        .btn { background: #111; border: 1px solid #333; color: #ccc; padding: 5px 12px; font-size: 11px; cursor: pointer; transition: 0.2s; display: flex; items-center; gap: 5px; border-radius: 3px; }
+        @keyframes turnOn { 0% { opacity: 0; transform: scaleY(0.01) scaleX(0); } 100% { opacity: 1; transform: scaleY(1) scaleX(1); } }
+        
+        /* UI Components */
+        .btn { background: #111; border: 1px solid #333; color: #ccc; padding: 5px 10px; font-size: 11px; cursor: pointer; display: flex; items-center; gap: 5px; border-radius: 3px; }
         .btn:hover { border-color: var(--accent); color: white; }
-        .btn-ai { border-color: var(--ai-color); color: var(--ai-color); } .btn-ai:hover { background: var(--ai-color); color: white; }
-        .ui-input { background: #050505; border: 1px solid #333; color: white; padding: 8px; font-family: 'Share Tech Mono'; outline: none; width: 100%; }
+        .btn-ai { border-color: var(--ai-color); color: var(--ai-color); }
+        .ui-input { background: #050505; border: 1px solid #333; color: white; padding: 8px; width: 100%; outline: none; font-family: 'Share Tech Mono'; }
         .ui-input:focus { border-color: var(--accent); }
 
         /* Modals */
@@ -98,96 +81,123 @@
         .modal-box { background: var(--panel); border: 1px solid var(--accent); padding: 2px; width: 340px; max-height: 80vh; overflow-y: auto; box-shadow: 0 0 30px var(--accent); display: flex; flex-direction: column; }
         .modal-header { background: var(--accent); color: black; font-weight: bold; padding: 6px 12px; font-size: 12px; display: flex; justify-content: space-between; }
         .modal-body { padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        .ui-btn { background: #111; border: 1px solid #333; color: #ccc; padding: 8px; cursor: pointer; text-align: left; transition: 0.2s; font-size: 12px; display: flex; align-items: center; gap: 8px; }
-        .ui-btn:hover { background: #222; border-color: var(--accent); color: white; padding-left: 12px; }
+        .ui-btn { background: #111; border: 1px solid #333; color: #ccc; padding: 8px; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 8px; font-size: 12px; }
+        .ui-btn:hover { border-color: var(--accent); color: white; padding-left: 12px; transition: 0.2s; }
 
-        /* Canvas IDE */
+        /* IDE */
         #immersive-canvas { position: fixed; inset: 0; z-index: 200; background: var(--bg); display: none; flex-direction: column; animation: slideUp 0.3s; }
         @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .canvas-header { height: 50px; border-bottom: 1px solid var(--border); background: var(--panel); display: flex; align-items: center; justify-content: space-between; padding: 0 10px; overflow-x: auto; }
+        .canvas-header { height: 50px; border-bottom: 1px solid var(--border); background: var(--panel); display: flex; align-items: center; justify-content: space-between; padding: 0 10px; }
         .canvas-body { flex: 1; display: flex; overflow: hidden; position: relative; }
-        .code-pane { flex: 1; display: flex; flex-direction: column; border-right: 1px solid var(--border); background: #080808; min-width: 300px; }
+        .code-pane { flex: 1; display: flex; flex-direction: column; border-right: 1px solid var(--border); background: #080808; min-width: 0; }
         .preview-pane { flex: 1; display: flex; flex-direction: column; background: #fff; position: relative; }
-        #editor-area { flex: 1; background: transparent; color: #d4d4d4; border: none; outline: none; padding: 20px; font-family: 'Fira Code', monospace; font-size: 13px; resize: none; line-height: 1.5; white-space: pre; }
-        
+        #editor-area { flex: 1; background: transparent; color: #d4d4d4; border: none; outline: none; padding: 15px; font-family: 'Fira Code', monospace; font-size: 13px; resize: none; }
         #web-preview { width: 100%; height: 100%; border: none; background: white; }
         #console-view { width: 100%; height: 100%; background: #111; color: var(--accent); font-family: 'Fira Code', monospace; padding: 15px; overflow-y: auto; display: none; font-size: 13px; }
-        
         .preview-pane.fullscreen { position: fixed; inset: 0; z-index: 300; width: 100% !important; height: 100% !important; }
-        .fs-exit-btn { display: none; position: absolute; top: 10px; right: 10px; background: red; color: white; padding: 8px 15px; cursor: pointer; z-index: 310; font-weight: bold; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .fs-exit-btn { display: none; position: absolute; top: 10px; right: 10px; background: red; color: white; padding: 5px 10px; cursor: pointer; z-index: 310; font-weight: bold; border-radius: 3px; }
         .preview-pane.fullscreen .fs-exit-btn { display: block; }
 
-        .key { background: #111; border: 1px solid #333; border-radius: 4px; display:flex; justify-content:center; align-items:center; cursor:pointer; font-size:12px; color:#666; transition: 0.05s; touch-action: manipulation; }
-        .key.active { background: var(--accent); color: black; box-shadow: 0 0 15px var(--accent); transform: scale(0.95); }
-
-        /* Grid & Mobile */
-        #desktop-grid { display: grid; width: 100%; height: 100%; padding: 6px; gap: 6px; grid-template-columns: 260px 1fr 260px; grid-template-rows: 50px 1fr 240px; opacity: 0; transition: opacity 0.5s; }
+        /* Grid */
+        #desktop-grid { display: grid; width: 100%; height: 100%; padding: 6px; gap: 6px; grid-template-columns: 260px 1fr 260px; grid-template-rows: 50px 1fr 240px; opacity: 0; }
         .panel { background: var(--panel); border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; position: relative; }
         .panel-header { background: #000; padding: 6px 10px; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; color: #666; }
 
+        /* Mobile */
         body.mobile-mode #desktop-grid { display: flex; flex-direction: column; gap: 2px; padding: 2px; }
         body.mobile-mode .panel { display: none; flex: 1; }
         body.mobile-mode #p-header { display: flex; flex: 0 0 50px; }
-        body.mobile-mode #p-keyboard { display: flex; flex: 0 0 200px; }
+        body.mobile-mode #p-keyboard { display: flex; flex: 0 0 220px; }
         body.mobile-mode .panel.active-panel { display: flex; }
         body.mobile-mode .canvas-body { flex-direction: column; }
-        body.mobile-mode .code-pane { border-right: none; border-bottom: 1px solid var(--border); height: 50%; width: 100%; min-width: 0; }
+        body.mobile-mode .code-pane { border-right: none; border-bottom: 1px solid var(--border); height: 50%; width: 100%; }
         body.mobile-mode .preview-pane { height: 50%; width: 100%; }
-        
         .mobile-nav { display: none; gap: 5px; }
         body.mobile-mode .mobile-nav { display: flex; }
         .m-nav-btn { padding: 4px 8px; border: 1px solid var(--border); color: #666; font-size: 10px; cursor: pointer; }
         .m-nav-btn.active { background: var(--accent); color: black; border-color: var(--accent); }
 
-        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 600; display: flex; flex-direction: column; gap: 10px; }
-        .toast { background: #111; border: 1px solid var(--accent); color: white; padding: 10px 20px; font-size: 12px; border-radius: 4px; box-shadow: 0 0 15px var(--accent); animation: slideIn 0.3s ease-out; display: flex; align-items: center; gap: 10px; }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
-        #start-overlay { position: fixed; inset: 0; background: #000; z-index: 400; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .device-selector { display: flex; gap: 20px; margin-top: 20px; }
-        .device-btn { border: 1px solid var(--border); padding: 15px 30px; color: var(--text); cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-        .device-btn:hover { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 20px rgba(0,255,65,0.2); }
-        .device-icon { width: 32px; height: 32px; }
-        #install-btn { display: none; margin-top: 20px; background: var(--accent); color: black; font-weight: bold; border: none; }
-
-        #boot-logs { text-align: left; font-family: 'Fira Code', monospace; width: 300px; height: 150px; overflow: hidden; display: none; flex-direction: column; justify-content: flex-end; margin-top: 20px; }
-        .log-line { font-size: 10px; color: var(--accent); margin-bottom: 2px; }
+        /* Key & Term */
+        .key { background: #111; border: 1px solid #333; border-radius: 4px; display:flex; justify-content:center; align-items:center; cursor:pointer; font-size:12px; color:#666; transition: 0.05s; touch-action: manipulation; }
+        .key.active { background: var(--accent); color: black; box-shadow: 0 0 15px var(--accent); transform: scale(0.95); }
         #term-out { flex: 1; padding: 10px; overflow-y: auto; color: #ccc; font-size: 13px; }
-        
-        #error-overlay { position: absolute; bottom: 0; left: 0; width: 100%; max-height: 40%; background: rgba(20,0,0,0.95); border-top: 2px solid var(--danger); color: white; padding: 10px; overflow-y: auto; font-family: monospace; font-size: 12px; display: none; z-index: 20; }
-        .error-title { color: var(--danger); font-weight: bold; margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
 
+        /* Start */
+        #start-overlay { position: fixed; inset: 0; background: #000; z-index: 400; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .device-btn { border: 1px solid var(--border); padding: 15px 30px; color: var(--text); cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 0 10px; }
+        .device-btn:hover { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 20px rgba(0,255,65,0.2); }
+        #install-btn { display: none; margin-top: 20px; background: var(--accent); color: black; font-weight: bold; border: none; padding: 10px 20px; cursor: pointer; }
+        
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 600; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: #111; border: 1px solid var(--accent); color: white; padding: 10px 20px; font-size: 12px; border-radius: 4px; box-shadow: 0 0 15px var(--accent); animation: slideIn 0.3s; display: flex; align-items: center; gap: 10px; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     </style>
 </head>
 <body class="theme-matrix">
 
     <div class="scanlines"></div>
     <div id="toast-container"></div>
-    <div id="crt-overlay"><div class="crt-flash"></div></div>
 
     <!-- START SCREEN -->
     <div id="start-overlay">
         <div id="start-content" class="flex flex-col items-center">
             <div class="text-5xl font-bold text-white mb-2 tracking-tighter">KAUÃ_OS</div>
-            <div class="text-xs text-gray-500 tracking-[0.5em] mb-8">BOOTLOADER V23.1 (STABLE)</div>
+            <div class="text-xs text-gray-500 tracking-[0.5em] mb-8">BOOTLOADER V25.0</div>
             
             <div class="text-sm text-gray-400 mb-4">SELECIONE O MODO:</div>
-            <div class="device-selector">
+            <div class="flex">
                 <div class="device-btn" onclick="OS.selectMode('desktop')">
-                    <i data-lucide="monitor" class="device-icon"></i>
+                    <i data-lucide="monitor" class="w-8 h-8"></i>
                     <span>PC</span>
                 </div>
                 <div class="device-btn" onclick="OS.selectMode('mobile')">
-                    <i data-lucide="smartphone" class="device-icon"></i>
+                    <i data-lucide="smartphone" class="w-8 h-8"></i>
                     <span>MOBILE</span>
                 </div>
             </div>
-            <!-- PWA INSTALL BUTTON -->
-            <button id="install-btn" class="ui-btn" onclick="PWA.install()">
-                <i data-lucide="download" class="w-4 h-4"></i> INSTALAR APP
+            <button id="install-btn" onclick="PWA.install()">
+                <i data-lucide="download" class="w-4 h-4 mr-2"></i> INSTALAR APP
             </button>
         </div>
-        <div id="boot-logs"></div>
+        <div id="boot-logs" style="display:none; font-family:'Fira Code'; width:300px; height:150px; overflow:hidden; flex-direction:column; justify-content:flex-end; margin-top:20px;"></div>
+    </div>
+
+    <!-- SETTINGS MODAL -->
+    <div id="modal-settings" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">CONFIGURAÇÕES <span onclick="UI.closeModal('modal-settings')" class="cursor-pointer">X</span></div>
+            <div class="modal-body">
+                <button class="ui-btn" onclick="UI.setTheme('theme-matrix')">Matrix Green</button>
+                <button class="ui-btn" onclick="UI.setTheme('theme-cyber')">Cyber Blue</button>
+                <button class="ui-btn" onclick="UI.setTheme('theme-dracula')">Dracula</button>
+                <button class="ui-btn" onclick="UI.setTheme('theme-fire')">Firewall Red</button>
+                <div class="h-px bg-gray-800 my-2"></div>
+                <!-- DOWNLOAD PROJECT BUTTON -->
+                <button class="ui-btn" onclick="FS.exportZip()">
+                    <i data-lucide="folder-down" class="w-4 text-yellow-400"></i> BAIXAR PROJETO (.ZIP)
+                </button>
+                <button class="ui-btn" onclick="PWA.install()">
+                    <i data-lucide="download" class="w-4 text-blue-400"></i> INSTALAR APP
+                </button>
+                <button class="ui-btn" style="color:var(--danger)" onclick="FS.reset()">RESETAR TUDO</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW FILE MODAL -->
+    <div id="modal-new" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">NOVO ARQUIVO <span onclick="UI.closeModal('modal-new')" class="cursor-pointer">X</span></div>
+            <div class="modal-body">
+                <input type="text" id="new-filename" class="ui-input" placeholder="Nome (ex: app.js)">
+                <div class="grid grid-cols-2 gap-2 mt-2">
+                    <button class="ui-btn" onclick="OS.createFile('html')">HTML</button>
+                    <button class="ui-btn" onclick="OS.createFile('js')">JS</button>
+                    <button class="ui-btn" onclick="OS.createFile('py')">PYTHON</button>
+                    <button class="ui-btn" onclick="OS.createFile('txt')">TXT</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- IDE CANVAS -->
@@ -200,7 +210,11 @@
             </div>
             
             <div class="flex items-center gap-2">
-                <!-- VIEW TOGGLES -->
+                <!-- DOWNLOAD CURRENT FILE BUTTON -->
+                <button class="btn" onclick="FS.downloadCurrent()" title="Baixar Arquivo Atual">
+                    <i data-lucide="download" class="w-3 h-3"></i>
+                </button>
+
                 <div class="flex bg-[#111] rounded border border-[#333] p-0.5">
                     <button id="btn-view-preview" class="px-2 py-1 text-[10px] bg-[#333] text-white rounded-sm" onclick="Canvas.setView('preview')">VIEW</button>
                     <button id="btn-view-console" class="px-2 py-1 text-[10px] text-gray-500" onclick="Canvas.setView('console')">LOGS</button>
@@ -209,7 +223,7 @@
                 <button class="btn btn-ai hidden md:flex" onclick="AI.smartFormat()">
                     <i data-lucide="wand-2" class="w-3 h-3"></i>
                 </button>
-                <button class="btn btn-primary" onclick="Canvas.run()">
+                <button class="btn" onclick="Canvas.run()" style="background:var(--accent); color:black;">
                     <i data-lucide="play" class="w-3 h-3"></i>
                 </button>
                 <button class="btn" onclick="Canvas.toggleFullscreen()">
@@ -223,23 +237,12 @@
             <div class="code-pane">
                 <textarea id="editor-area" spellcheck="false" placeholder="// Escreva seu código..."></textarea>
             </div>
-            
             <div class="preview-pane" id="preview-container">
                 <button class="fs-exit-btn" onclick="Canvas.toggleFullscreen()">SAIR DA TELA CHEIA</button>
-                
-                <!-- WEB PREVIEW -->
                 <iframe id="web-preview"></iframe>
-                
-                <!-- CONSOLE PREVIEW -->
                 <div id="console-view">
                     <div class="opacity-50 mb-2 border-b border-gray-700 pb-1">// TERMINAL OUTPUT</div>
                     <div id="console-logs"></div>
-                </div>
-
-                <div id="error-overlay">
-                    <div class="error-title"><i data-lucide="alert-triangle" class="w-4 h-4"></i> ERRO:</div>
-                    <div id="error-msg" class="text-gray-300 mb-2"></div>
-                    <button class="btn w-full justify-center" onclick="AI.smartFormat()" style="border-color:var(--ai-color); color:var(--ai-color)">TENTAR CORREÇÃO</button>
                 </div>
             </div>
         </div>
@@ -250,7 +253,7 @@
         <div class="panel power-off" id="p-header" style="grid-column: 1 / -1; grid-row: 1;">
             <div class="flex items-center justify-between h-full px-2 md:px-4">
                 <div class="font-bold flex items-center gap-2 text-sm md:text-lg">
-                    KAUÃ_OS <span class="text-[10px] border border-[var(--accent)] px-1 rounded text-[var(--accent)]">V23</span>
+                    KAUÃ_OS <span class="text-[10px] border border-[var(--accent)] px-1 rounded text-[var(--accent)]">V25</span>
                 </div>
                 <div class="mobile-nav">
                     <div class="m-nav-btn active" onclick="OS.switchMobileTab('term')">TERM</div>
@@ -259,7 +262,7 @@
                     <div class="m-nav-btn" onclick="OS.switchMobileTab('net')">REDE</div>
                 </div>
                 <div class="flex gap-4 items-center">
-                    <button onclick="UI.openModal('modal-settings')" class="text-[10px] hover:text-[var(--accent)] hidden md:block">OPÇÕES</button>
+                    <button onclick="UI.openModal('modal-settings')" class="text-[10px] hover:text-[var(--accent)] text-white">OPÇÕES</button>
                     <div id="clock" class="text-xs md:text-sm font-mono text-gray-500">00:00</div>
                 </div>
             </div>
@@ -285,7 +288,7 @@
 
         <div class="panel power-off active-panel" id="p-center" style="grid-column: 2; grid-row: 2;">
             <div class="panel-header">TERMINAL</div>
-            <div id="term-out" class="font-mono text-xs p-2 text-gray-300 overflow-y-auto h-full"></div>
+            <div id="term-out"></div>
             <div class="bg-black p-2 flex items-center border-t border-[var(--border)]">
                 <span style="color:var(--accent)" class="mr-2 font-bold">root@kaua:~$</span>
                 <input id="cmd-input" type="text" class="bg-transparent border-none outline-none text-white flex-1 font-mono" autocomplete="off">
@@ -313,35 +316,6 @@
         </div>
     </div>
 
-    <!-- MODALS -->
-    <div id="modal-new" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-header">NOVO ARQUIVO <span onclick="UI.closeModal('modal-new')" class="cursor-pointer">X</span></div>
-            <div class="modal-body">
-                <input type="text" id="new-filename" class="ui-input" placeholder="Nome (ex: app.js)">
-                <div class="grid grid-cols-2 gap-2 mt-2">
-                    <button class="ui-btn" onclick="OS.createFile('html')">HTML</button>
-                    <button class="ui-btn" onclick="OS.createFile('js')">JS</button>
-                    <button class="ui-btn" onclick="OS.createFile('py')">PYTHON</button>
-                    <button class="ui-btn" onclick="OS.createFile('txt')">TXT</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="modal-settings" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-header">CONFIGURAÇÕES <span onclick="UI.closeModal('modal-settings')" class="cursor-pointer">X</span></div>
-            <div class="modal-body">
-                <button class="ui-btn" onclick="UI.setTheme('theme-matrix')">Matrix Green</button>
-                <button class="ui-btn" onclick="UI.setTheme('theme-cyber')">Cyber Blue</button>
-                <button class="ui-btn" onclick="UI.setTheme('theme-dracula')">Dracula</button>
-                <button class="ui-btn" onclick="PWA.install()">INSTALAR APP</button>
-                <button class="ui-btn" style="color:var(--danger)" onclick="FS.reset()">RESETAR</button>
-            </div>
-        </div>
-    </div>
-
     <script>
         // --- PWA HANDLER ---
         const PWA = {
@@ -363,66 +337,68 @@
                         }
                     });
                 } else {
-                    alert("Para instalar: No Chrome, clique nos 3 pontinhos -> 'Adicionar à tela inicial'. (Se estiver no PC: ícone na barra de endereço)");
+                    alert("Se o botão não funcionar: No Chrome, vá ao menu (3 pontos) -> 'Instalar aplicativo' ou 'Adicionar à tela inicial'.");
                 }
             }
         };
         PWA.init();
 
-        // --- AUDIO SYSTEM ---
+        // --- AUDIO ---
         const AudioSys = {
-            ctx: null, profile: 'mech', muted: false,
+            ctx: null, muted: false,
             init() { window.AudioContext = window.AudioContext || window.webkitAudioContext; this.ctx = new AudioContext(); },
-            toggleMute() {
-                this.muted = !this.muted;
-                const btn = document.getElementById('kb-mute-btn');
-                if(btn) { btn.setAttribute('data-lucide', this.muted?'volume-x':'volume-2'); btn.classList.toggle('text-red-500', this.muted); lucide.createIcons(); }
-            },
-            playStartup() {
-                if(!this.ctx) this.init(); if(this.ctx.state==='suspended') this.ctx.resume(); if(this.muted) return;
-                const now = this.ctx.currentTime;
-                [220, 330, 440, 550, 660, 880].forEach((f, i) => {
-                    const o=this.ctx.createOscillator(); const g=this.ctx.createGain(); o.type='sawtooth'; o.frequency.value=f;
-                    o.connect(g); g.connect(this.ctx.destination);
-                    g.gain.setValueAtTime(0, now+i*0.1); g.gain.linearRampToValueAtTime(0.05, now+i*0.1+0.05); g.gain.exponentialRampToValueAtTime(0.001, now+i*0.1+0.3);
-                    o.start(now+i*0.1); o.stop(now+i*0.1+0.35);
-                });
-            },
+            toggleMute() { this.muted = !this.muted; document.getElementById('kb-mute-btn').classList.toggle('text-red-500', this.muted); },
             play(type) {
-                if(!this.ctx || this.ctx.state==='suspended') this.ctx?.resume(); if(this.muted && type==='type') return;
+                if(!this.ctx) this.init(); if(this.ctx.state==='suspended') this.ctx.resume(); if(this.muted) return;
                 const o=this.ctx.createOscillator(); const g=this.ctx.createGain(); o.connect(g); g.connect(this.ctx.destination);
-                const t=this.ctx.currentTime; o.type='triangle'; o.frequency.setValueAtTime(type==='enter'?600:800, t);
-                g.gain.exponentialRampToValueAtTime(0.001, t+0.05); o.start(t); o.stop(t+0.05);
-            }
-        };
-
-        // --- AI FORMATTER ---
-        const AI = {
-            smartFormat() {
-                const ed = document.getElementById('editor-area');
-                let code = ed.value;
-                if (Canvas.activeTab.endsWith('.html')) {
-                    if(!code.includes('<!DOCTYPE')) code = '<!DOCTYPE html>\n' + code;
-                    const o = (code.match(/<div/g)||[]).length; const c = (code.match(/<\/div>/g)||[]).length;
-                    if(o>c) code += '\n' + '</div>'.repeat(o-c);
-                    if(code.includes('<script') && !code.includes('<'+'/script>')) code += '\n<'+'/script>';
+                const t=this.ctx.currentTime;
+                if(type==='startup') {
+                    [220,330,440,660].forEach((f,i)=>{
+                        const os=this.ctx.createOscillator(); const gn=this.ctx.createGain(); os.type='sawtooth'; os.frequency.value=f;
+                        os.connect(gn); gn.connect(this.ctx.destination); gn.gain.setValueAtTime(0,t+i*0.1); gn.gain.linearRampToValueAtTime(0.05,t+i*0.1+0.05); gn.gain.exponentialRampToValueAtTime(0.001,t+i*0.1+0.3);
+                        os.start(t+i*0.1); os.stop(t+i*0.1+0.4);
+                    });
+                } else {
+                    o.type='triangle'; o.frequency.setValueAtTime(type==='enter'?600:800,t);
+                    g.gain.exponentialRampToValueAtTime(0.001, t+0.05); o.start(t); o.stop(t+0.05);
                 }
-                ed.value = code; Canvas.run();
-                UI.toast("Código corrigido/formatado.", "info");
             }
         };
 
-        // --- CANVAS ---
+        // --- FILES & OS ---
+        const FS = {
+            files: {},
+            init() { try{const s=localStorage.getItem('kaua_files'); this.files=s?JSON.parse(s):{'index.html':{type:'web',content:'<h1>Ola Mundo</h1>'}};}catch{this.files={};} },
+            save() { localStorage.setItem('kaua_files',JSON.stringify(this.files)); UI.renderFiles(); },
+            add(n,t,c) { this.files[n]={type:t,content:c}; this.save(); },
+            reset() { localStorage.removeItem('kaua_files'); location.reload(); },
+            downloadCurrent() {
+                if(!Canvas.activeTab) return;
+                const f = this.files[Canvas.activeTab];
+                if(f) {
+                    const blob = new Blob([f.content], {type: 'text/plain'});
+                    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = Canvas.activeTab; a.click();
+                }
+            },
+            exportZip() {
+                const z = new JSZip();
+                Object.keys(this.files).forEach(k => z.file(k, this.files[k].content));
+                z.generateAsync({type:"blob"}).then(b => {
+                    const a = document.createElement('a'); a.href=URL.createObjectURL(b); a.download="projeto.zip"; a.click();
+                });
+            }
+        };
+
         const Canvas = {
             activeTab: null, openTabs: [],
             open(filename) {
                 if(!this.openTabs.includes(filename)) this.openTabs.push(filename);
                 this.activeTab = filename;
-                document.getElementById('immersive-canvas').style.display = 'flex';
+                document.getElementById('immersive-canvas').style.display='flex';
                 this.renderTabs(); this.load(); this.setView('preview');
             },
             close() {
-                document.getElementById('immersive-canvas').style.display = 'none';
+                document.getElementById('immersive-canvas').style.display='none';
                 if(this.activeTab) { FS.files[this.activeTab].content = document.getElementById('editor-area').value; FS.save(); }
             },
             load() {
@@ -434,63 +410,35 @@
                 const code = document.getElementById('editor-area').value;
                 const iframe = document.getElementById('web-preview');
                 const consoleDiv = document.getElementById('console-logs');
-                document.getElementById('error-overlay').style.display = 'none';
-                
                 if(this.activeTab) { FS.files[this.activeTab].content = code; FS.save(); }
-
-                consoleDiv.innerHTML = '';
-                iframe.src = 'about:blank';
-                
+                consoleDiv.innerHTML = ''; iframe.src = 'about:blank';
                 setTimeout(() => {
                     if(this.activeTab.endsWith('.html')) {
-                        const doc = iframe.contentWindow.document;
-                        doc.open();
-                        doc.write(`
-                            <style>body{color:#000; background:#fff; font-family:sans-serif;}</style>
-                            <script>
-                                console.log = function(m){ window.parent.postMessage({type:'log', msg:m}, '*'); }
-                                window.onerror = function(m){ window.parent.postMessage({type:'error', msg:m}, '*'); }
-                            <` + `/script>
-                            ${code}
-                        `);
+                        const doc = iframe.contentWindow.document; doc.open();
+                        doc.write(`<script>
+                            console.log = function(m){ window.parent.postMessage({type:'log', msg:m}, '*'); }
+                            window.onerror = function(m){ window.parent.postMessage({type:'error', msg:m}, '*'); }
+                        <`+`/script>${code}`);
                         doc.close();
                     } else {
                         this.setView('console');
                         try {
                             if(this.activeTab.endsWith('.js')) new Function('console', code)({ log: (m) => consoleDiv.innerHTML += `<div class="text-green-400">> ${m}</div>` });
-                            else consoleDiv.innerHTML += `<div class="text-blue-400">> Execução de ${this.activeTab} simulada.</div>`;
-                        } catch(e) {
-                            consoleDiv.innerHTML += `<div class="text-red-500">Erro: ${e.message}</div>`;
-                        }
+                            else consoleDiv.innerHTML += `<div class="text-blue-400">> Simulação concluída.</div>`;
+                        } catch(e) { consoleDiv.innerHTML += `<div class="text-red-500">${e.message}</div>`; }
                     }
                 }, 50);
             },
             setView(mode) {
                 const web = document.getElementById('web-preview');
                 const cons = document.getElementById('console-view');
-                const btnPrev = document.getElementById('btn-view-preview');
-                const btnCons = document.getElementById('btn-view-console');
-
-                if(mode === 'preview') { 
-                    web.style.display='block'; cons.style.display='none'; 
-                    btnPrev.classList.replace('text-gray-500','text-white'); btnPrev.classList.replace('bg-transparent','bg-[#333]');
-                    btnCons.classList.replace('text-white','text-gray-500'); btnCons.classList.replace('bg-[#333]','bg-transparent');
-                } else { 
-                    web.style.display='none'; cons.style.display='block'; 
-                    btnCons.classList.replace('text-gray-500','text-white'); btnCons.classList.replace('bg-transparent','bg-[#333]');
-                    btnPrev.classList.replace('text-white','text-gray-500'); btnPrev.classList.replace('bg-[#333]','bg-transparent');
-                }
-            },
-            showError(msg) {
-                document.getElementById('error-overlay').style.display = 'block';
-                document.getElementById('error-msg').innerText = msg;
-                AudioSys.play('type');
+                if(mode === 'preview') { web.style.display='block'; cons.style.display='none'; }
+                else { web.style.display='none'; cons.style.display='block'; }
             },
             renderTabs() {
-                const c = document.getElementById('tabs-bar'); c.innerHTML = '';
+                const c = document.getElementById('tabs-bar'); c.innerHTML='';
                 this.openTabs.forEach(t => {
-                    const el = document.createElement('div');
-                    el.className = `tab ${t===this.activeTab?'active':''}`;
+                    const el = document.createElement('div'); el.className = `tab ${t===this.activeTab?'active':''}`;
                     el.innerHTML = `${t} <span class="ml-2 hover:text-red-500" onclick="Canvas.closeTab('${t}', event)">x</span>`;
                     el.onclick = () => { this.activeTab = t; this.load(); this.renderTabs(); };
                     c.appendChild(el);
@@ -506,27 +454,6 @@
             toggleFullscreen() { document.getElementById('preview-container').classList.toggle('fullscreen'); }
         };
 
-        window.addEventListener('message', e => {
-            if(e.data.type === 'log') document.getElementById('console-logs').innerHTML += `<div class="text-green-400 border-b border-[#222]">> ${e.data.msg}</div>`;
-            if(e.data.type === 'error') Canvas.showError(e.data.msg);
-        });
-
-        // --- OS & FILES ---
-        const FS = {
-            files: {},
-            init() { try { const s = localStorage.getItem('kaua_files'); this.files = s ? JSON.parse(s) : { 'index.html': { type: 'web', content: '<h1>Ola!</h1>' } }; } catch { this.files = {}; } },
-            save() { localStorage.setItem('kaua_files', JSON.stringify(this.files)); UI.renderFiles(); },
-            add(n, t, c) { this.files[n] = {type:t, content:c}; this.save(); },
-            reset() { localStorage.removeItem('kaua_files'); location.reload(); },
-            exportZip() { 
-                const z = new JSZip();
-                Object.keys(this.files).forEach(k => z.file(k, this.files[k].content));
-                z.generateAsync({type:"blob"}).then(b => {
-                    const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download="project.zip"; a.click();
-                });
-            }
-        };
-
         const OS = {
             isMobile: false,
             selectMode(mode) {
@@ -536,37 +463,27 @@
             },
             bootSequence() {
                 document.getElementById('start-content').style.display = 'none';
-                const log = document.getElementById('boot-logs');
-                log.style.display = 'flex';
-                AudioSys.playStartup();
-                
-                let steps = ["Kernel Init...", "Mounting VFS...", "Starting Services..."];
-                let i = 0;
+                document.getElementById('boot-logs').style.display = 'flex';
+                AudioSys.play('startup');
+                let steps = ["Kernel Init...", "Services...", "UI Load..."];
+                let i=0;
                 let int = setInterval(() => {
                     if(i >= steps.length) {
                         clearInterval(int);
-                        document.getElementById('crt-overlay').style.display = 'block';
-                        setTimeout(() => {
-                            document.getElementById('start-overlay').style.display='none';
-                            document.getElementById('desktop-grid').style.opacity = 1;
-                            
-                            if(this.isMobile) {
-                                document.getElementById('p-left').classList.remove('active-panel'); 
-                                document.getElementById('p-right').classList.remove('active-panel');
-                                document.getElementById('p-files').classList.remove('active-panel');
-                                document.getElementById('p-center').classList.add('active-panel'); 
-                            }
-
-                            document.querySelectorAll('.power-off').forEach(e => {
-                                if(!this.isMobile || e.classList.contains('active-panel') || e.id === 'p-header' || e.id === 'p-keyboard') {
-                                    e.classList.remove('power-off'); e.classList.add('power-on');
-                                } else { e.classList.remove('power-off'); }
-                            });
-                            document.getElementById('crt-overlay').style.display = 'none';
-                        }, 500);
+                        document.getElementById('start-overlay').style.display='none';
+                        document.getElementById('desktop-grid').style.opacity = 1;
+                        if(this.isMobile) {
+                            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel'));
+                            document.getElementById('p-center').classList.add('active-panel');
+                        }
+                        document.querySelectorAll('.power-off').forEach(e => {
+                            if(!this.isMobile || e.classList.contains('active-panel') || e.id==='p-header' || e.id==='p-keyboard') {
+                                e.classList.remove('power-off'); e.classList.add('power-on');
+                            } else e.classList.remove('power-off');
+                        });
                         return;
                     }
-                    log.innerHTML += `<div class="log-line">> ${steps[i]}</div>`;
+                    document.getElementById('boot-logs').innerHTML += `<div class="log-line">> ${steps[i]}</div>`;
                     i++;
                 }, 400);
             },
@@ -580,9 +497,7 @@
             },
             createFile(ext) {
                 const n = document.getElementById('new-filename').value || 'untitled';
-                FS.add(n+'.'+ext, 'code', '');
-                UI.closeModal('modal-new');
-                Canvas.open(n+'.'+ext);
+                FS.add(n+'.'+ext, 'code', ''); UI.closeModal('modal-new'); Canvas.open(n+'.'+ext);
             }
         };
 
@@ -594,43 +509,31 @@
                     const d = document.createElement('div');
                     d.className="flex flex-col items-center cursor-pointer hover:bg-white/10 p-2 rounded text-[10px] text-gray-400";
                     d.innerHTML=`<i data-lucide="file-code" class="w-5 h-5 mb-1"></i>${f}`;
-                    d.onclick = () => Canvas.open(f);
-                    g.appendChild(d);
+                    d.onclick = () => Canvas.open(f); g.appendChild(d);
                 });
                 lucide.createIcons();
             },
-            renderKeys(containerId) {
-                const c = document.getElementById(containerId); c.innerHTML = '';
+            renderKeys(cid) {
+                const c = document.getElementById(cid); c.innerHTML = '';
                 ["1234567890","QWERTYUIOP","ASDFGHJKL","ZXCVBNM"].forEach(r => {
                     const d = document.createElement('div'); d.className="flex gap-1 justify-center w-full mb-1";
-                    r.split('').forEach(c => {
-                        const key = document.createElement('div');
-                        key.className = "key flex-1 h-8"; key.innerText = c; key.dataset.key = c;
-                        
-                        const trigger = (e) => {
-                            if(e.type === 'touchstart') e.preventDefault();
-                            const active = document.activeElement.tagName==='TEXTAREA'?document.activeElement:document.getElementById('cmd-input');
-                            active.value += c; AudioSys.play('type');
-                            key.classList.add('active'); setTimeout(()=>key.classList.remove('active'), 100);
-                        };
-                        key.addEventListener('mousedown', trigger); key.addEventListener('touchstart', trigger);
-                        d.appendChild(key);
+                    r.split('').forEach(ch => {
+                        const k = document.createElement('div'); k.className="key flex-1 h-8"; k.innerText=ch; k.dataset.key=ch;
+                        const trig = (e) => { if(e.type==='touchstart') e.preventDefault(); const a = document.activeElement.tagName==='TEXTAREA'?document.activeElement:document.getElementById('cmd-input'); a.value+=ch; AudioSys.play('type'); k.classList.add('active'); setTimeout(()=>k.classList.remove('active'),100); };
+                        k.addEventListener('mousedown', trig); k.addEventListener('touchstart', trig);
+                        d.appendChild(k);
                     });
                     c.appendChild(d);
                 });
                 const sp = document.createElement('div'); sp.className="flex justify-center";
-                const spKey = document.createElement('div'); spKey.className="key w-1/2 h-8"; spKey.innerText="SPACE"; spKey.dataset.key="SPACE";
-                const triggerSp = (e) => {
-                    if(e.type === 'touchstart') e.preventDefault();
-                    document.getElementById('cmd-input').value+=' '; AudioSys.play('type');
-                    spKey.classList.add('active'); setTimeout(()=>spKey.classList.remove('active'), 100);
-                }
-                spKey.addEventListener('mousedown', triggerSp); spKey.addEventListener('touchstart', triggerSp);
-                sp.appendChild(spKey); c.appendChild(sp);
+                const k = document.createElement('div'); k.className="key w-1/2 h-8"; k.innerText="SPACE";
+                const trigSp = (e) => { if(e.type==='touchstart') e.preventDefault(); document.getElementById('cmd-input').value+=' '; AudioSys.play('type'); k.classList.add('active'); setTimeout(()=>k.classList.remove('active'),100); };
+                k.addEventListener('mousedown', trigSp); k.addEventListener('touchstart', trigSp);
+                sp.appendChild(k); c.appendChild(sp);
             },
-            openModal(id) { document.getElementById(id).style.display = 'flex'; },
-            closeModal(id) { document.getElementById(id).style.display = 'none'; },
-            setTheme(t) { document.body.className = t; localStorage.setItem('kaua_theme', t); this.closeModal('modal-settings'); },
+            openModal(id) { document.getElementById(id).style.display='flex'; },
+            closeModal(id) { document.getElementById(id).style.display='none'; },
+            setTheme(t) { document.body.className = t; if(OS.isMobile) document.body.classList.add('mobile-mode'); localStorage.setItem('kaua_theme', t); this.closeModal('modal-settings'); },
             startGlobe() {
                 const c = document.getElementById('globe-canvas'); const ctx = c.getContext('2d');
                 let t=0;
@@ -640,46 +543,42 @@
                     ctx.fillStyle='black'; ctx.fillRect(0,0,c.width,c.height);
                     t+=0.02; ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--accent');
                     for(let i=0;i<60;i++) {
-                        const a = (i/60)*6.28+t;
-                        const x = Math.cos(a)*40 + c.width/2;
-                        const y = Math.sin(a)*10 + c.height/2;
+                        const a = (i/60)*6.28+t; const x = Math.cos(a)*40 + c.width/2; const y = Math.sin(a)*10 + c.height/2;
                         ctx.beginPath(); ctx.arc(x,y,2,0,6.28); ctx.fill();
                     }
                     requestAnimationFrame(loop);
                 }
                 loop();
             },
-            toast(m, t) {
+            toast(m) {
                 const c = document.getElementById('toast-container');
                 const d = document.createElement('div'); d.className='toast';
-                d.innerHTML = `<i data-lucide="${t==='success'?'check':'info'}" class="w-4 h-4"></i> ${m}`;
+                d.innerHTML = `<i data-lucide="info" class="w-4 h-4"></i> ${m}`;
                 c.appendChild(d); lucide.createIcons(); setTimeout(()=>d.remove(),3000);
             }
         };
 
-        // Key Listener
+        const AI = { smartFormat() { const e=document.getElementById('editor-area'); let c=e.value; if(Canvas.activeTab.endsWith('.html') && !c.includes('<!DOCTYPE')) c='<!DOCTYPE html>\n'+c; e.value=c; Canvas.run(); UI.toast('Formatado'); } };
+
+        window.addEventListener('message', e => { if(e.data.type==='log') document.getElementById('console-logs').innerHTML+=`<div>> ${e.data.msg}</div>`; });
         window.addEventListener('keydown', e => {
             const k = document.querySelector(`.key[data-key="${e.key.toUpperCase()}"]`);
             if(k) { k.classList.add('active'); setTimeout(()=>k.classList.remove('active'),150); AudioSys.play('type'); }
-            
-            if(e.key === 'Enter' && document.activeElement.id === 'cmd-input') {
+            if(e.key==='Enter' && document.activeElement.id==='cmd-input') {
                 const v = document.getElementById('cmd-input').value;
-                document.getElementById('term-out').innerHTML += `<div>root:~$ ${v}</div>`;
-                if(v.startsWith('code')) { const f=v.split(' ')[1]; if(f) Canvas.open(f); }
+                document.getElementById('term-out').innerHTML+=`<div>root:~$ ${v}</div>`;
+                if(v.startsWith('code')) Canvas.open(v.split(' ')[1]);
                 document.getElementById('cmd-input').value=''; AudioSys.play('type');
             }
         });
 
-        // Loop
         setInterval(() => {
             document.getElementById('clock').innerText = new Date().toLocaleTimeString();
             document.getElementById('cpu-val').innerText = Math.floor(Math.random()*30+10)+"%";
             document.getElementById('cpu-bar').style.width = document.getElementById('cpu-val').innerText;
         }, 1000);
 
-        // Init
         FS.init(); UI.init();
-
     </script>
 </body>
 </html>
