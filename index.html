@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KAUÃ_OS // V25_FINAL</title>
+    <title>KAUÃ_OS // V26_MOBILE_FIX</title>
     
     <!-- PWA META TAGS -->
     <meta name="theme-color" content="#000000">
@@ -11,17 +11,17 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Kauã OS">
 
-    <!-- ICONS PLACEHOLDER -->
+    <!-- ICONS -->
     <link rel="icon" id="favicon" type="image/png" href="">
     <link rel="apple-touch-icon" id="apple-icon" href="">
     
-    <!-- LIBRARIES -->
+    <!-- LIBS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 
-    <!-- PWA AUTO-INJECTOR -->
+    <!-- PWA INJECTOR -->
     <script>
         (function() {
             try {
@@ -33,7 +33,7 @@
                 if(apple) apple.href = iconUrl;
 
                 const manifest = {
-                    "name": "Kauã OS Ultimate", "short_name": "KauãOS", "start_url": ".", "display": "standalone",
+                    "name": "Kauã OS", "short_name": "KauãOS", "start_url": ".", "display": "standalone",
                     "background_color": "#000000", "theme_color": "#000000", "orientation": "portrait",
                     "icons": [{ "src": iconUrl, "sizes": "192x192", "type": "image/svg+xml", "purpose": "any maskable" }]
                 };
@@ -42,19 +42,16 @@
                 link.rel = 'manifest'; link.href = URL.createObjectURL(blob);
                 document.head.appendChild(link);
 
-                if ('serviceWorker' in navigator) {
-                    if (window.location.protocol !== 'blob:' && window.location.protocol !== 'data:') {
-                        const swCode = "self.addEventListener('install', (e) => self.skipWaiting()); self.addEventListener('fetch', (e) => {});";
-                        const swUrl = URL.createObjectURL(new Blob([swCode], {type: 'application/javascript'}));
-                        navigator.serviceWorker.register(swUrl).catch(e => console.log('SW Info: Ambiente restrito.'));
-                    }
+                if ('serviceWorker' in navigator && window.location.protocol !== 'blob:') {
+                    const swCode = "self.addEventListener('install', (e) => self.skipWaiting()); self.addEventListener('fetch', (e) => {});";
+                    const swUrl = URL.createObjectURL(new Blob([swCode], {type: 'application/javascript'}));
+                    navigator.serviceWorker.register(swUrl).catch(() => {});
                 }
-            } catch(e) { console.warn("PWA Warning:", e); }
+            } catch(e) {}
         })();
     </script>
 
     <style>
-        /* --- STYLES --- */
         :root { --bg: #050505; --panel: #0a0a0a; --border: #333; --accent: #00ff41; --text: #e0e0e0; --danger: #ef4444; --ai-color: #8b5cf6; }
         body.theme-matrix { --bg: #000; --panel: #020a02; --border: #003300; --accent: #00ff41; }
         body.theme-cyber { --bg: #050510; --panel: #0a0a1a; --border: #003366; --accent: #00f3ff; }
@@ -65,6 +62,8 @@
         body { background-color: var(--bg); color: var(--text); font-family: 'Share Tech Mono', monospace; height: 100vh; width: 100vw; overflow: hidden; margin: 0; display: flex; justify-content: center; align-items: center; transition: background 0.5s; }
 
         .scanlines { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.25) 50%), linear-gradient(90deg, rgba(255,0,0,0.06), rgba(0,255,0,0.02), rgba(0,0,255,0.06)); background-size: 100% 2px, 3px 100%; pointer-events: none; z-index: 10; opacity: 0.15; }
+        
+        /* Animations */
         .power-off { opacity: 0; filter: brightness(0) blur(4px); pointer-events: none; display: none; }
         .power-on { opacity: 1; filter: brightness(1) blur(0); pointer-events: all; display: flex; animation: turnOn 0.6s ease-out forwards; box-shadow: 0 0 15px rgba(0,0,0,0.3); }
         @keyframes turnOn { 0% { opacity: 0; transform: scaleY(0.01) scaleX(0); } 100% { opacity: 1; transform: scaleY(1) scaleX(1); } }
@@ -72,7 +71,6 @@
         /* UI Components */
         .btn { background: #111; border: 1px solid #333; color: #ccc; padding: 5px 10px; font-size: 11px; cursor: pointer; display: flex; items-center; gap: 5px; border-radius: 3px; }
         .btn:hover { border-color: var(--accent); color: white; }
-        .btn-ai { border-color: var(--ai-color); color: var(--ai-color); }
         .ui-input { background: #050505; border: 1px solid #333; color: white; padding: 8px; width: 100%; outline: none; font-family: 'Share Tech Mono'; }
         .ui-input:focus { border-color: var(--accent); }
 
@@ -84,7 +82,7 @@
         .ui-btn { background: #111; border: 1px solid #333; color: #ccc; padding: 8px; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 8px; font-size: 12px; }
         .ui-btn:hover { border-color: var(--accent); color: white; padding-left: 12px; transition: 0.2s; }
 
-        /* IDE */
+        /* Canvas IDE */
         #immersive-canvas { position: fixed; inset: 0; z-index: 200; background: var(--bg); display: none; flex-direction: column; animation: slideUp 0.3s; }
         @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .canvas-header { height: 50px; border-bottom: 1px solid var(--border); background: var(--panel); display: flex; align-items: center; justify-content: space-between; padding: 0 10px; }
@@ -98,12 +96,15 @@
         .fs-exit-btn { display: none; position: absolute; top: 10px; right: 10px; background: red; color: white; padding: 5px 10px; cursor: pointer; z-index: 310; font-weight: bold; border-radius: 3px; }
         .preview-pane.fullscreen .fs-exit-btn { display: block; }
 
-        /* Grid */
+        /* Grid System */
         #desktop-grid { display: grid; width: 100%; height: 100%; padding: 6px; gap: 6px; grid-template-columns: 260px 1fr 260px; grid-template-rows: 50px 1fr 240px; opacity: 0; }
         .panel { background: var(--panel); border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; position: relative; }
         .panel-header { background: #000; padding: 6px 10px; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; color: #666; }
 
-        /* Mobile */
+        /* File Grid Spacing Fix */
+        #file-grid { gap: 15px; padding: 10px; } /* Increased gap for mobile */
+
+        /* Mobile specific */
         body.mobile-mode #desktop-grid { display: flex; flex-direction: column; gap: 2px; padding: 2px; }
         body.mobile-mode .panel { display: none; flex: 1; }
         body.mobile-mode #p-header { display: flex; flex: 0 0 50px; }
@@ -112,25 +113,35 @@
         body.mobile-mode .canvas-body { flex-direction: column; }
         body.mobile-mode .code-pane { border-right: none; border-bottom: 1px solid var(--border); height: 50%; width: 100%; }
         body.mobile-mode .preview-pane { height: 50%; width: 100%; }
+        /* 3 Columns for files on mobile */
+        body.mobile-mode #file-grid { grid-template-columns: repeat(3, 1fr); }
+        
         .mobile-nav { display: none; gap: 5px; }
         body.mobile-mode .mobile-nav { display: flex; }
         .m-nav-btn { padding: 4px 8px; border: 1px solid var(--border); color: #666; font-size: 10px; cursor: pointer; }
         .m-nav-btn.active { background: var(--accent); color: black; border-color: var(--accent); }
 
-        /* Key & Term */
-        .key { background: #111; border: 1px solid #333; border-radius: 4px; display:flex; justify-content:center; align-items:center; cursor:pointer; font-size:12px; color:#666; transition: 0.05s; touch-action: manipulation; }
-        .key.active { background: var(--accent); color: black; box-shadow: 0 0 15px var(--accent); transform: scale(0.95); }
+        /* Keyboard */
+        .key { background: #111; border: 1px solid #333; border-radius: 4px; display:flex; justify-content:center; align-items:center; cursor:pointer; font-size:12px; color:#666; transition: 0.05s; touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+        /* Ensure active state works visually even on touch */
+        .key.active { background: var(--accent) !important; color: black !important; box-shadow: 0 0 15px var(--accent); transform: scale(0.95); border-color: white; }
         #term-out { flex: 1; padding: 10px; overflow-y: auto; color: #ccc; font-size: 13px; }
 
-        /* Start */
+        /* Start Overlay */
         #start-overlay { position: fixed; inset: 0; background: #000; z-index: 400; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .device-btn { border: 1px solid var(--border); padding: 15px 30px; color: var(--text); cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 0 10px; }
         .device-btn:hover { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 20px rgba(0,255,65,0.2); }
         #install-btn { display: none; margin-top: 20px; background: var(--accent); color: black; font-weight: bold; border: none; padding: 10px 20px; cursor: pointer; }
         
+        /* Toast */
         #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 600; display: flex; flex-direction: column; gap: 10px; }
         .toast { background: #111; border: 1px solid var(--accent); color: white; padding: 10px 20px; font-size: 12px; border-radius: 4px; box-shadow: 0 0 15px var(--accent); animation: slideIn 0.3s; display: flex; align-items: center; gap: 10px; }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        
+        /* File Deletion Button */
+        .file-del-btn { display: none; position: absolute; top: -5px; right: -5px; color: red; background: black; border-radius: 50%; padding: 2px; }
+        .file-item:hover .file-del-btn { display: block; }
+        body.mobile-mode .file-del-btn { display: block; opacity: 0.7; } /* Always show on mobile */
     </style>
 </head>
 <body class="theme-matrix">
@@ -142,7 +153,7 @@
     <div id="start-overlay">
         <div id="start-content" class="flex flex-col items-center">
             <div class="text-5xl font-bold text-white mb-2 tracking-tighter">KAUÃ_OS</div>
-            <div class="text-xs text-gray-500 tracking-[0.5em] mb-8">BOOTLOADER V25.0</div>
+            <div class="text-xs text-gray-500 tracking-[0.5em] mb-8">BOOTLOADER V26.0</div>
             
             <div class="text-sm text-gray-400 mb-4">SELECIONE O MODO:</div>
             <div class="flex">
@@ -172,7 +183,6 @@
                 <button class="ui-btn" onclick="UI.setTheme('theme-dracula')">Dracula</button>
                 <button class="ui-btn" onclick="UI.setTheme('theme-fire')">Firewall Red</button>
                 <div class="h-px bg-gray-800 my-2"></div>
-                <!-- DOWNLOAD PROJECT BUTTON -->
                 <button class="ui-btn" onclick="FS.exportZip()">
                     <i data-lucide="folder-down" class="w-4 text-yellow-400"></i> BAIXAR PROJETO (.ZIP)
                 </button>
@@ -210,16 +220,13 @@
             </div>
             
             <div class="flex items-center gap-2">
-                <!-- DOWNLOAD CURRENT FILE BUTTON -->
-                <button class="btn" onclick="FS.downloadCurrent()" title="Baixar Arquivo Atual">
+                <button class="btn" onclick="FS.downloadCurrent()" title="Baixar Arquivo">
                     <i data-lucide="download" class="w-3 h-3"></i>
                 </button>
-
                 <div class="flex bg-[#111] rounded border border-[#333] p-0.5">
                     <button id="btn-view-preview" class="px-2 py-1 text-[10px] bg-[#333] text-white rounded-sm" onclick="Canvas.setView('preview')">VIEW</button>
                     <button id="btn-view-console" class="px-2 py-1 text-[10px] text-gray-500" onclick="Canvas.setView('console')">LOGS</button>
                 </div>
-
                 <button class="btn btn-ai hidden md:flex" onclick="AI.smartFormat()">
                     <i data-lucide="wand-2" class="w-3 h-3"></i>
                 </button>
@@ -253,7 +260,7 @@
         <div class="panel power-off" id="p-header" style="grid-column: 1 / -1; grid-row: 1;">
             <div class="flex items-center justify-between h-full px-2 md:px-4">
                 <div class="font-bold flex items-center gap-2 text-sm md:text-lg">
-                    KAUÃ_OS <span class="text-[10px] border border-[var(--accent)] px-1 rounded text-[var(--accent)]">V25</span>
+                    KAUÃ_OS <span class="text-[10px] border border-[var(--accent)] px-1 rounded text-[var(--accent)]">V26</span>
                 </div>
                 <div class="mobile-nav">
                     <div class="m-nav-btn active" onclick="OS.switchMobileTab('term')">TERM</div>
@@ -288,7 +295,7 @@
 
         <div class="panel power-off active-panel" id="p-center" style="grid-column: 2; grid-row: 2;">
             <div class="panel-header">TERMINAL</div>
-            <div id="term-out"></div>
+            <div id="term-out" class="font-mono text-xs p-2 text-gray-300 overflow-y-auto h-full"></div>
             <div class="bg-black p-2 flex items-center border-t border-[var(--border)]">
                 <span style="color:var(--accent)" class="mr-2 font-bold">root@kaua:~$</span>
                 <input id="cmd-input" type="text" class="bg-transparent border-none outline-none text-white flex-1 font-mono" autocomplete="off">
@@ -304,7 +311,7 @@
 
         <div class="panel power-off" id="p-files" style="grid-column: 2; grid-row: 3; width: 40%; float: left; margin-right: 5px;">
             <div class="panel-header">ARQUIVOS <span onclick="UI.openModal('modal-new')" class="cursor-pointer hover:text-white">+</span></div>
-            <div id="file-grid" class="p-2 grid grid-cols-4 gap-2 content-start overflow-y-auto h-full"></div>
+            <div id="file-grid" class="p-2 grid grid-cols-4 content-start overflow-y-auto h-full"></div>
         </div>
 
         <div class="panel power-off" id="p-keyboard" style="grid-column: 2 / 4; grid-row: 3; width: auto; margin-left: 41%;">
@@ -317,78 +324,77 @@
     </div>
 
     <script>
-        // --- PWA HANDLER ---
+        // --- PWA ---
         const PWA = {
             deferredPrompt: null,
             init() {
-                window.addEventListener('beforeinstallprompt', (e) => {
-                    e.preventDefault();
-                    this.deferredPrompt = e;
-                    document.getElementById('install-btn').style.display = 'flex';
-                });
+                window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); this.deferredPrompt = e; document.getElementById('install-btn').style.display='flex'; });
             },
             install() {
                 if(this.deferredPrompt) {
                     this.deferredPrompt.prompt();
-                    this.deferredPrompt.userChoice.then((choice) => {
-                        if(choice.outcome === 'accepted') {
-                            this.deferredPrompt = null;
-                            document.getElementById('install-btn').style.display = 'none';
-                        }
-                    });
-                } else {
-                    alert("Se o botão não funcionar: No Chrome, vá ao menu (3 pontos) -> 'Instalar aplicativo' ou 'Adicionar à tela inicial'.");
-                }
+                    this.deferredPrompt.userChoice.then((choice) => { if(choice.outcome === 'accepted') { this.deferredPrompt = null; document.getElementById('install-btn').style.display='none'; } });
+                } else alert("Para instalar: No Chrome, menu (3 pontos) -> 'Instalar aplicativo' ou 'Adicionar à tela inicial'.");
             }
         };
         PWA.init();
 
-        // --- AUDIO ---
+        // --- AUDIO (FIXED MOBILE) ---
         const AudioSys = {
             ctx: null, muted: false,
-            init() { window.AudioContext = window.AudioContext || window.webkitAudioContext; this.ctx = new AudioContext(); },
+            init() { 
+                window.AudioContext = window.AudioContext || window.webkitAudioContext; 
+                this.ctx = new AudioContext(); 
+                // Unlock audio on first touch
+                const unlock = () => {
+                    if(this.ctx.state === 'suspended') this.ctx.resume();
+                    document.removeEventListener('touchstart', unlock);
+                    document.removeEventListener('click', unlock);
+                };
+                document.addEventListener('touchstart', unlock);
+                document.addEventListener('click', unlock);
+            },
             toggleMute() { this.muted = !this.muted; document.getElementById('kb-mute-btn').classList.toggle('text-red-500', this.muted); },
+            playStartup() {
+                if(!this.ctx) this.init();
+                const now = this.ctx.currentTime;
+                [220,330,440,660].forEach((f,i)=>{
+                    const o=this.ctx.createOscillator(); const g=this.ctx.createGain(); o.type='sawtooth'; o.frequency.value=f;
+                    o.connect(g); g.connect(this.ctx.destination);
+                    g.gain.setValueAtTime(0,now+i*0.1); g.gain.linearRampToValueAtTime(0.05,now+i*0.1+0.05); g.gain.exponentialRampToValueAtTime(0.001,now+i*0.1+0.3);
+                    o.start(now+i*0.1); o.stop(now+i*0.1+0.4);
+                });
+            },
             play(type) {
-                if(!this.ctx) this.init(); if(this.ctx.state==='suspended') this.ctx.resume(); if(this.muted) return;
+                if(!this.ctx || this.muted) return;
+                if(this.ctx.state === 'suspended') this.ctx.resume();
                 const o=this.ctx.createOscillator(); const g=this.ctx.createGain(); o.connect(g); g.connect(this.ctx.destination);
-                const t=this.ctx.currentTime;
-                if(type==='startup') {
-                    [220,330,440,660].forEach((f,i)=>{
-                        const os=this.ctx.createOscillator(); const gn=this.ctx.createGain(); os.type='sawtooth'; os.frequency.value=f;
-                        os.connect(gn); gn.connect(this.ctx.destination); gn.gain.setValueAtTime(0,t+i*0.1); gn.gain.linearRampToValueAtTime(0.05,t+i*0.1+0.05); gn.gain.exponentialRampToValueAtTime(0.001,t+i*0.1+0.3);
-                        os.start(t+i*0.1); os.stop(t+i*0.1+0.4);
-                    });
-                } else {
-                    o.type='triangle'; o.frequency.setValueAtTime(type==='enter'?600:800,t);
-                    g.gain.exponentialRampToValueAtTime(0.001, t+0.05); o.start(t); o.stop(t+0.05);
-                }
+                const t=this.ctx.currentTime; o.type='triangle'; o.frequency.setValueAtTime(type==='enter'?600:800,t);
+                g.gain.exponentialRampToValueAtTime(0.001, t+0.05); o.start(t); o.stop(t+0.05);
             }
         };
 
-        // --- FILES & OS ---
+        // --- FILES ---
         const FS = {
             files: {},
             init() { try{const s=localStorage.getItem('kaua_files'); this.files=s?JSON.parse(s):{'index.html':{type:'web',content:'<h1>Ola Mundo</h1>'}};}catch{this.files={};} },
             save() { localStorage.setItem('kaua_files',JSON.stringify(this.files)); UI.renderFiles(); },
             add(n,t,c) { this.files[n]={type:t,content:c}; this.save(); },
+            delete(n) { delete this.files[n]; this.save(); Canvas.close(); }, // Delete logic
             reset() { localStorage.removeItem('kaua_files'); location.reload(); },
             downloadCurrent() {
                 if(!Canvas.activeTab) return;
                 const f = this.files[Canvas.activeTab];
-                if(f) {
-                    const blob = new Blob([f.content], {type: 'text/plain'});
-                    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = Canvas.activeTab; a.click();
-                }
+                if(f) { const blob = new Blob([f.content], {type: 'text/plain'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = Canvas.activeTab; a.click(); }
             },
             exportZip() {
                 const z = new JSZip();
                 Object.keys(this.files).forEach(k => z.file(k, this.files[k].content));
-                z.generateAsync({type:"blob"}).then(b => {
-                    const a = document.createElement('a'); a.href=URL.createObjectURL(b); a.download="projeto.zip"; a.click();
-                });
+                z.generateAsync({type:"blob"}).then(b => { const a = document.createElement('a'); a.href=URL.createObjectURL(b); a.download="projeto.zip"; a.click(); });
             }
         };
 
+        // --- CANVAS ---
         const Canvas = {
             activeTab: null, openTabs: [],
             open(filename) {
@@ -432,8 +438,17 @@
             setView(mode) {
                 const web = document.getElementById('web-preview');
                 const cons = document.getElementById('console-view');
-                if(mode === 'preview') { web.style.display='block'; cons.style.display='none'; }
-                else { web.style.display='none'; cons.style.display='block'; }
+                const btnPrev = document.getElementById('btn-view-preview');
+                const btnCons = document.getElementById('btn-view-console');
+                if(mode === 'preview') { 
+                    web.style.display='block'; cons.style.display='none'; 
+                    btnPrev.classList.replace('text-gray-500','text-white'); btnPrev.classList.replace('bg-transparent','bg-[#333]');
+                    btnCons.classList.replace('text-white','text-gray-500'); btnCons.classList.replace('bg-[#333]','bg-transparent');
+                } else { 
+                    web.style.display='none'; cons.style.display='block'; 
+                    btnCons.classList.replace('text-gray-500','text-white'); btnCons.classList.replace('bg-transparent','bg-[#333]');
+                    btnPrev.classList.replace('text-white','text-gray-500'); btnPrev.classList.replace('bg-[#333]','bg-transparent');
+                }
             },
             renderTabs() {
                 const c = document.getElementById('tabs-bar'); c.innerHTML='';
@@ -464,7 +479,7 @@
             bootSequence() {
                 document.getElementById('start-content').style.display = 'none';
                 document.getElementById('boot-logs').style.display = 'flex';
-                AudioSys.play('startup');
+                AudioSys.playStartup();
                 let steps = ["Kernel Init...", "Services...", "UI Load..."];
                 let i=0;
                 let int = setInterval(() => {
@@ -501,14 +516,20 @@
             }
         };
 
+        const AI = { smartFormat() { const e=document.getElementById('editor-area'); let c=e.value; if(Canvas.activeTab.endsWith('.html') && !c.includes('<!DOCTYPE')) c='<!DOCTYPE html>\n'+c; e.value=c; Canvas.run(); UI.toast('Formatado'); } };
+
         const UI = {
             init() { this.renderFiles(); this.renderKeys('kb-container'); this.startGlobe(); },
             renderFiles() {
                 const g = document.getElementById('file-grid'); g.innerHTML='';
                 Object.keys(FS.files).forEach(f => {
                     const d = document.createElement('div');
-                    d.className="flex flex-col items-center cursor-pointer hover:bg-white/10 p-2 rounded text-[10px] text-gray-400";
-                    d.innerHTML=`<i data-lucide="file-code" class="w-5 h-5 mb-1"></i>${f}`;
+                    d.className="relative file-item flex flex-col items-center cursor-pointer hover:bg-white/10 p-2 rounded text-[10px] text-gray-400 group";
+                    d.innerHTML=`
+                        <i data-lucide="file-code" class="w-5 h-5 mb-1"></i>
+                        <span class="truncate w-full text-center">${f}</span>
+                        <div class="file-del-btn" onclick="event.stopPropagation(); FS.delete('${f}')"><i data-lucide="x-circle" class="w-4 h-4 bg-black rounded-full"></i></div>
+                    `;
                     d.onclick = () => Canvas.open(f); g.appendChild(d);
                 });
                 lucide.createIcons();
@@ -519,7 +540,14 @@
                     const d = document.createElement('div'); d.className="flex gap-1 justify-center w-full mb-1";
                     r.split('').forEach(ch => {
                         const k = document.createElement('div'); k.className="key flex-1 h-8"; k.innerText=ch; k.dataset.key=ch;
-                        const trig = (e) => { if(e.type==='touchstart') e.preventDefault(); const a = document.activeElement.tagName==='TEXTAREA'?document.activeElement:document.getElementById('cmd-input'); a.value+=ch; AudioSys.play('type'); k.classList.add('active'); setTimeout(()=>k.classList.remove('active'),100); };
+                        const trig = (e) => { 
+                            if(e.type==='touchstart') e.preventDefault(); 
+                            const a = document.activeElement.tagName==='TEXTAREA'?document.activeElement:document.getElementById('cmd-input'); 
+                            a.value+=ch; 
+                            AudioSys.play('type'); 
+                            k.classList.add('active'); 
+                            setTimeout(()=>k.classList.remove('active'), 100); 
+                        };
                         k.addEventListener('mousedown', trig); k.addEventListener('touchstart', trig);
                         d.appendChild(k);
                     });
@@ -527,7 +555,7 @@
                 });
                 const sp = document.createElement('div'); sp.className="flex justify-center";
                 const k = document.createElement('div'); k.className="key w-1/2 h-8"; k.innerText="SPACE";
-                const trigSp = (e) => { if(e.type==='touchstart') e.preventDefault(); document.getElementById('cmd-input').value+=' '; AudioSys.play('type'); k.classList.add('active'); setTimeout(()=>k.classList.remove('active'),100); };
+                const trigSp = (e) => { if(e.type==='touchstart') e.preventDefault(); document.getElementById('cmd-input').value+=' '; AudioSys.play('type'); k.classList.add('active'); setTimeout(()=>k.classList.remove('active'), 100); };
                 k.addEventListener('mousedown', trigSp); k.addEventListener('touchstart', trigSp);
                 sp.appendChild(k); c.appendChild(sp);
             },
@@ -557,8 +585,6 @@
                 c.appendChild(d); lucide.createIcons(); setTimeout(()=>d.remove(),3000);
             }
         };
-
-        const AI = { smartFormat() { const e=document.getElementById('editor-area'); let c=e.value; if(Canvas.activeTab.endsWith('.html') && !c.includes('<!DOCTYPE')) c='<!DOCTYPE html>\n'+c; e.value=c; Canvas.run(); UI.toast('Formatado'); } };
 
         window.addEventListener('message', e => { if(e.data.type==='log') document.getElementById('console-logs').innerHTML+=`<div>> ${e.data.msg}</div>`; });
         window.addEventListener('keydown', e => {
