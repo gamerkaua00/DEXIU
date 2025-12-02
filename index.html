@@ -3,18 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KAUÃ_OS // GEMINI_CANVAS_V10</title>
+    <title>KAUÃ_OS // ULTIMATE_V11</title>
+    
+    <!-- Bibliotecas Externas -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
     <style>
+        /* --- TEMAS (CSS Variables) --- */
         :root {
             --bg: #050505;
             --panel: #0a0a0a;
             --border: #333;
             --accent: #00ff41;
             --text: #e0e0e0;
+            --danger: #ef4444;
+            --warning: #f59e0b;
         }
+
+        /* Classes de Tema */
+        body.theme-matrix { --bg: #000; --panel: #020a02; --border: #003300; --accent: #00ff41; }
+        body.theme-cyber { --bg: #050510; --panel: #0a0a1a; --border: #003366; --accent: #00f3ff; }
+        body.theme-dracula { --bg: #282a36; --panel: #44475a; --border: #6272a4; --accent: #ff79c6; }
+        body.theme-fire { --bg: #1a0500; --panel: #2a0a00; --border: #661a00; --accent: #ff4500; }
 
         * { box-sizing: border-box; user-select: none; }
         
@@ -23,6 +36,7 @@
             font-family: 'Share Tech Mono', monospace;
             height: 100vh; width: 100vw; overflow: hidden;
             margin: 0; display: flex; justify-content: center; align-items: center;
+            transition: background 0.5s, color 0.5s;
         }
 
         /* --- FX --- */
@@ -30,203 +44,217 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
                         linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            background-size: 100% 2px, 3px 100%; pointer-events: none; z-index: 10; opacity: 0.2;
+            background-size: 100% 2px, 3px 100%; pointer-events: none; z-index: 10; opacity: 0.15;
         }
 
-        /* --- MODALS (New File) --- */
+        /* --- ANIMATIONS --- */
+        .power-off { opacity: 0; transform: scale(0.98); filter: brightness(0); pointer-events: none; }
+        .power-on { 
+            opacity: 1; transform: scale(1); filter: brightness(1); pointer-events: all;
+            transition: opacity 0.4s ease-out, transform 0.4s ease-out, filter 0.6s;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        /* --- MODALS --- */
         .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 150;
-            display: none; align-items: center; justify-content: center; backdrop-filter: blur(2px);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 200;
+            display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px);
         }
         .modal-box {
-            background: #0f0f0f; border: 1px solid var(--accent); padding: 2px;
-            width: 300px; box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
-            display: flex; flex-direction: column;
+            background: var(--panel); border: 1px solid var(--accent); padding: 2px;
+            width: 320px; box-shadow: 0 0 30px var(--accent);
+            display: flex; flex-direction: column; animation: modalPop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+        @keyframes modalPop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
         .modal-header {
-            background: var(--accent); color: black; font-weight: bold; padding: 5px 10px;
-            text-transform: uppercase; font-size: 12px;
+            background: var(--accent); color: black; font-weight: bold; padding: 6px 12px;
+            text-transform: uppercase; font-size: 12px; display: flex; justify-content: space-between;
         }
         .modal-body { padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        .lang-btn {
-            background: #222; border: 1px solid #444; color: #ccc; padding: 8px;
+        
+        .ui-btn {
+            background: #111; border: 1px solid #333; color: #ccc; padding: 8px;
             cursor: pointer; text-align: left; transition: 0.2s; font-size: 12px;
-            display: flex; align-items: center; gap: 10px;
+            display: flex; align-items: center; gap: 8px;
         }
-        .lang-btn:hover { background: #333; border-color: var(--accent); color: white; }
-        .modal-input {
-            background: black; border: 1px solid #444; color: white; padding: 8px;
-            font-family: 'Share Tech Mono'; outline: none;
+        .ui-btn:hover { background: #222; border-color: var(--accent); color: white; padding-left: 12px; }
+        .ui-input {
+            background: #050505; border: 1px solid #333; color: white; padding: 8px;
+            font-family: 'Share Tech Mono'; outline: none; width: 100%;
         }
+        .ui-input:focus { border-color: var(--accent); }
 
-        /* --- IMMERSIVE CANVAS --- */
+        /* --- IMMERSIVE CANVAS V2 --- */
         #immersive-canvas {
             position: fixed; inset: 0; z-index: 100;
-            background: #080808;
+            background: var(--bg);
             display: none; flex-direction: column;
             animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
         .canvas-header {
-            height: 50px; border-bottom: 1px solid #333;
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 20px; background: #0f0f0f;
+            height: 45px; border-bottom: 1px solid var(--border); background: var(--panel);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 15px;
         }
 
-        .canvas-body { flex: 1; display: flex; overflow: hidden; }
+        /* TABS SYSTEM */
+        .tabs-container { display: flex; gap: 2px; overflow-x: auto; max-width: 40vw; }
+        .tab {
+            padding: 4px 12px; background: #111; border: 1px solid #333; border-bottom: none;
+            color: #666; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 6px;
+            border-radius: 4px 4px 0 0; margin-top: 6px; position: relative;
+        }
+        .tab.active { background: var(--bg); border-color: var(--accent); color: white; height: 32px; border-bottom: 2px solid var(--bg); z-index: 10;}
+        .tab-close { font-size: 14px; opacity: 0.5; } .tab-close:hover { opacity: 1; color: var(--danger); }
+
+        .canvas-body { flex: 1; display: flex; overflow: hidden; position: relative; }
 
         .code-pane {
-            flex: 1; display: flex; flex-direction: column; border-right: 1px solid #333;
-            background: #0b0b0b; min-width: 300px;
+            flex: 1; display: flex; flex-direction: column; border-right: 1px solid var(--border);
+            background: #080808; min-width: 300px;
         }
         .preview-pane {
             flex: 1; display: flex; flex-direction: column;
-            background: #1a1a1a; position: relative;
+            background: #ffffff; position: relative;
+        }
+        /* Error Overlay in Preview */
+        #error-overlay {
+            position: absolute; bottom: 0; left: 0; width: 100%; max-height: 50%;
+            background: rgba(40,0,0,0.95); border-top: 2px solid var(--danger);
+            color: white; padding: 15px; overflow-y: auto; font-family: monospace; font-size: 12px;
+            display: none; z-index: 20;
         }
 
         #editor-area {
             flex: 1; background: transparent; color: #d4d4d4; border: none; outline: none;
-            padding: 20px; font-family: 'Fira Code', monospace; font-size: 14px; resize: none;
-            line-height: 1.6; white-space: pre;
-        }
-
-        #web-preview { width: 100%; height: 100%; border: none; background: white; display: none; }
-        #console-preview { 
-            width: 100%; height: 100%; padding: 20px; 
-            font-family: 'Fira Code', monospace; font-size: 14px; 
-            color: var(--accent); overflow-y: auto; display: none;
+            padding: 20px; font-family: 'Fira Code', monospace; font-size: 13px; resize: none;
+            line-height: 1.5; white-space: pre;
         }
 
         /* --- DESKTOP GRID --- */
         #desktop-grid {
-            display: grid; width: 100%; height: 100%; padding: 5px; gap: 5px;
-            grid-template-columns: 250px 1fr 250px; 
-            grid-template-rows: 40px 1fr 240px;
-            transition: opacity 0.3s, filter 0.3s;
-            opacity: 0; 
+            display: grid; width: 100%; height: 100%; padding: 6px; gap: 6px;
+            grid-template-columns: 260px 1fr 260px; 
+            grid-template-rows: 50px 1fr 240px;
+            opacity: 1;
         }
 
-        /* Mobile Layout */
         @media (max-width: 1024px) {
-            #desktop-grid {
-                grid-template-columns: 1fr;
-                grid-template-rows: 40px 1fr 200px;
-            }
+            #desktop-grid { grid-template-columns: 1fr; grid-template-rows: 40px 1fr 200px; }
             #p-left, #p-right, #p-files { display: none !important; }
             #p-header { grid-column: 1 !important; grid-row: 1 !important; }
             #p-center { grid-column: 1 !important; grid-row: 2 !important; }
             #p-keyboard { grid-column: 1 !important; grid-row: 3 !important; width: 100% !important; margin-left: 0 !important; }
-            
             .canvas-body { flex-direction: column; }
-            .code-pane { border-right: none; border-bottom: 1px solid #333; height: 50%; }
-            .preview-pane { height: 50%; }
+            .code-pane { border-right: none; border-bottom: 1px solid var(--border); height: 50%; }
         }
 
-        /* --- PANELS --- */
-        .panel {
-            background: var(--panel); border: 1px solid var(--border);
-            display: flex; flex-direction: column; overflow: hidden; position: relative;
-        }
-        .panel-header {
-            background: #111; padding: 4px 10px; font-size: 11px;
-            text-transform: uppercase; border-bottom: 1px solid var(--border);
-            display: flex; justify-content: space-between; align-items: center; color: #666;
-        }
+        .panel { background: var(--panel); border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        .panel-header { background: #000; padding: 6px 10px; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; color: #666; }
 
-        /* --- UI ELEMENTS --- */
+        /* --- UI HELPERS --- */
         .btn {
-            background: #222; border: 1px solid #444; color: #ccc;
-            padding: 6px 14px; font-size: 12px; cursor: pointer; transition: 0.2s;
-            display: flex; items-center; gap: 5px; border-radius: 4px;
+            background: #111; border: 1px solid #333; color: #ccc;
+            padding: 5px 12px; font-size: 11px; cursor: pointer; transition: 0.2s;
+            display: flex; items-center; gap: 5px; border-radius: 3px;
         }
-        .btn:hover { background: #333; color: white; border-color: #666; }
-        .btn-run { background: #14532d; border-color: #166534; color: #4ade80; }
-        .btn-run:hover { background: #15803d; }
+        .btn:hover { border-color: var(--accent); color: white; }
+        .btn-primary { background: var(--accent); color: black; font-weight: bold; border: none; }
+        .btn-primary:hover { opacity: 0.8; }
 
-        .key { 
-            background: #111; border: 1px solid #333; border-radius: 4px; 
-            display:flex; justify-content:center; align-items:center; cursor:pointer; 
-            font-size:12px; transition:0.05s; color:#666; 
-        }
-        /* Efeito visual da tecla corrigido */
-        .key.active { background: #fff; color: black; box-shadow: 0 0 15px rgba(255,255,255,0.8); transform: translateY(1px); }
-
+        /* Term & Keys */
         #term-out { flex: 1; padding: 10px; overflow-y: auto; color: #ccc; font-size: 13px; }
         .cmd-line { color: white; font-weight: bold; margin-top: 5px; }
+        .key { background: #111; border: 1px solid #333; border-radius: 4px; display:flex; justify-content:center; align-items:center; cursor:pointer; font-size:12px; color:#666; transition: 0.05s; }
+        .key.active { background: var(--accent); color: black; box-shadow: 0 0 10px var(--accent); transform: translateY(1px); }
 
         /* START OVERLAY */
         #start-overlay {
-            position: fixed; inset: 0; background: #000; z-index: 200;
+            position: fixed; inset: 0; background: #000; z-index: 300;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            cursor: pointer;
         }
-        .blink-text { animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0.5; } }
+        .loader-bar { width: 200px; height: 2px; background: #222; margin-top: 20px; overflow: hidden; }
+        .loader-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.1s; }
 
     </style>
 </head>
-<body>
+<body class="theme-matrix">
 
     <div class="scanlines"></div>
 
-    <!-- START OVERLAY -->
+    <!-- START SCREEN -->
     <div id="start-overlay" onclick="OS.boot()">
-        <div class="text-3xl font-bold text-white mb-2 tracking-tighter">KAUÃ_OS <span class="text-xs text-green-500 bg-green-900/30 px-1 rounded">V10</span></div>
-        <div class="text-xs text-gray-500 blink-text">CLICK TO INITIALIZE SYSTEM</div>
+        <div class="text-4xl font-bold text-white mb-2 tracking-tighter">KAUÃ_OS <span class="text-xs bg-white text-black px-1 rounded">ULTIMATE</span></div>
+        <div class="text-xs text-gray-500 blink-text">CLIQUE PARA INICIAR SISTEMA</div>
+        <div class="loader-bar"><div class="loader-fill" id="boot-fill"></div></div>
     </div>
 
     <!-- NEW FILE MODAL -->
-    <div id="new-file-modal" class="modal-overlay">
+    <div id="modal-new" class="modal-overlay">
         <div class="modal-box">
-            <div class="modal-header">NOVO ARQUIVO</div>
+            <div class="modal-header">NOVO ARQUIVO <span onclick="UI.closeModal('modal-new')" class="cursor-pointer">X</span></div>
             <div class="modal-body">
-                <input type="text" id="new-filename" class="modal-input" placeholder="Nome do arquivo (sem extensão)">
-                <div class="text-xs text-gray-500 mt-2">SELECIONE A LINGUAGEM:</div>
-                <button class="lang-btn" onclick="OS.createFile('html')"><i data-lucide="globe" class="w-4 h-4 text-orange-400"></i> HTML5 (Web)</button>
-                <button class="lang-btn" onclick="OS.createFile('python')"><i data-lucide="terminal" class="w-4 h-4 text-blue-400"></i> PYTHON 3</button>
-                <button class="lang-btn" onclick="OS.createFile('java')"><i data-lucide="coffee" class="w-4 h-4 text-red-400"></i> JAVA</button>
-                <button class="lang-btn" onclick="OS.createFile('cpp')"><i data-lucide="code-2" class="w-4 h-4 text-blue-600"></i> C++</button>
-                <button class="lang-btn" onclick="OS.createFile('csharp')"><i data-lucide="hash" class="w-4 h-4 text-purple-400"></i> C#</button>
-                <button class="lang-btn" style="border-color: #991b1b; color: #f87171;" onclick="document.getElementById('new-file-modal').style.display='none'">CANCELAR</button>
+                <input type="text" id="new-filename" class="ui-input" placeholder="Nome (ex: app.js)">
+                <div class="text-xs text-gray-500 mt-2">MODELOS:</div>
+                <button class="ui-btn" onclick="OS.createFile('html')"><i data-lucide="globe" class="w-4 text-blue-400"></i> HTML5 (Web)</button>
+                <button class="ui-btn" onclick="OS.createFile('js')"><i data-lucide="file-json" class="w-4 text-yellow-400"></i> JAVASCRIPT</button>
+                <button class="ui-btn" onclick="OS.createFile('py')"><i data-lucide="terminal" class="w-4 text-green-400"></i> PYTHON</button>
+                <button class="ui-btn" onclick="OS.createFile('txt')"><i data-lucide="file-text" class="w-4 text-gray-400"></i> NOTAS (TXT)</button>
             </div>
         </div>
     </div>
 
-    <!-- IMMERSIVE CANVAS (GEMINI STYLE) -->
+    <!-- SETTINGS MODAL -->
+    <div id="modal-settings" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">CONFIGURAÇÕES <span onclick="UI.closeModal('modal-settings')" class="cursor-pointer">X</span></div>
+            <div class="modal-body">
+                <div class="text-xs text-gray-500">TEMAS VISUAIS:</div>
+                <button class="ui-btn" onclick="UI.setTheme('theme-matrix')"><div class="w-3 h-3 bg-green-500 rounded-full"></div> Matrix Green (Padrão)</button>
+                <button class="ui-btn" onclick="UI.setTheme('theme-cyber')"><div class="w-3 h-3 bg-cyan-500 rounded-full"></div> Cyber Blue</button>
+                <button class="ui-btn" onclick="UI.setTheme('theme-dracula')"><div class="w-3 h-3 bg-purple-500 rounded-full"></div> Dracula Purple</button>
+                <button class="ui-btn" onclick="UI.setTheme('theme-fire')"><div class="w-3 h-3 bg-red-500 rounded-full"></div> Firewall Red</button>
+                <div class="h-px bg-gray-800 my-2"></div>
+                <button class="ui-btn" onclick="FS.exportZip()"><i data-lucide="download" class="w-4"></i> BAIXAR PROJETO (.ZIP)</button>
+                <button class="ui-btn" style="color:var(--danger)" onclick="FS.reset()"><i data-lucide="trash" class="w-4"></i> RESETAR FABRICA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMMERSIVE CANVAS -->
     <div id="immersive-canvas">
         <div class="canvas-header">
-            <div class="flex items-center gap-3">
-                <div class="p-1 bg-green-900 rounded border border-green-700">
-                    <i data-lucide="terminal" class="w-4 h-4 text-green-400"></i>
+            <div class="flex items-center gap-4" style="flex: 1; overflow: hidden;">
+                <div class="font-bold text-sm tracking-widest text-[var(--accent)]">IDE</div>
+                <!-- TABS -->
+                <div class="tabs-container" id="tabs-bar">
+                    <!-- Tabs Injected Here -->
                 </div>
-                <div>
-                    <div class="text-sm font-bold text-white tracking-wide" id="canvas-filename">UNTITLED</div>
-                    <div class="text-[10px] text-gray-500">DEV ENVIRONMENT</div>
-                </div>
+                <button class="btn" onclick="UI.openModal('modal-new')">+</button>
             </div>
             
-            <div class="flex items-center gap-3">
-                <button class="btn btn-run" onclick="Canvas.run()">
-                    <i data-lucide="play" class="w-3 h-3"></i> <span class="hidden md:inline">RODAR CÓDIGO</span>
+            <div class="flex items-center gap-2">
+                <button class="btn btn-primary" onclick="Canvas.run()">
+                    <i data-lucide="play" class="w-3 h-3"></i> <span class="hidden md:inline">RODAR</span>
                 </button>
-                <button class="btn" onclick="Canvas.close()">
-                    <i data-lucide="x" class="w-3 h-3"></i> FECHAR
-                </button>
+                <button class="btn" onclick="Canvas.close()">FECHAR</button>
             </div>
         </div>
 
         <div class="canvas-body">
             <div class="code-pane">
-                <textarea id="editor-area" spellcheck="false" placeholder="// Escreva seu código aqui..."></textarea>
+                <textarea id="editor-area" spellcheck="false" placeholder="// Code here..."></textarea>
             </div>
             <div class="preview-pane">
-                <iframe id="web-preview"></iframe>
-                <div id="console-preview">
-                    <div class="opacity-50 mb-2">// CONSOLE OUTPUT</div>
-                    <div id="console-logs"></div>
+                <iframe id="web-preview" class="w-full h-full border-none bg-white"></iframe>
+                <div id="console-preview" class="w-full h-full p-4 font-mono text-sm overflow-auto text-[var(--accent)] hidden bg-[#050505]"></div>
+                
+                <!-- Error Overlay -->
+                <div id="error-overlay">
+                    <div class="font-bold mb-1">ERRO DETECTADO:</div>
+                    <div id="error-msg" class="text-gray-300"></div>
                 </div>
-                <div class="absolute top-2 right-2 px-2 py-1 bg-black/50 text-[10px] text-gray-400 border border-white/10 rounded">PREVIEW</div>
             </div>
         </div>
     </div>
@@ -234,63 +262,66 @@
     <!-- DESKTOP GRID -->
     <div id="desktop-grid">
         <!-- HEADER -->
-        <div class="panel" id="p-header" style="grid-column: 1 / -1; grid-row: 1;">
+        <div class="panel power-off" id="p-header" style="grid-column: 1 / -1; grid-row: 1;">
             <div class="flex items-center justify-between h-full px-4">
-                <div class="font-bold text-lg text-white flex gap-2 items-center">
-                    KAUÃ_OS <span class="text-[10px] bg-green-900 px-1 rounded text-green-300">V10</span>
+                <div class="font-bold text-lg flex gap-2 items-center">
+                    KAUÃ_OS <span class="text-[10px] border border-[var(--accent)] px-1 rounded text-[var(--accent)]">V11</span>
                 </div>
                 <div class="flex gap-4 items-center">
-                    <div id="clock" class="text-sm font-mono text-gray-400">00:00</div>
+                    <button onclick="UI.openModal('modal-settings')" class="text-[10px] hover:text-[var(--accent)] transition">OPÇÕES</button>
+                    <div id="clock" class="text-sm font-mono text-gray-500">00:00</div>
                 </div>
             </div>
         </div>
 
         <!-- LEFT -->
-        <div class="panel" id="p-left" style="grid-column: 1; grid-row: 2 / 4;">
-            <div class="panel-header">STATUS</div>
+        <div class="panel power-off" id="p-left" style="grid-column: 1; grid-row: 2 / 4;">
+            <div class="panel-header">SISTEMA</div>
             <div class="p-4 flex flex-col gap-4">
-                <canvas id="cpu-chart" class="w-full h-24 border border-gray-800 bg-black"></canvas>
-                <div class="text-xs text-gray-400">CPU LOAD: <span id="cpu-val" class="text-green-400">12%</span></div>
+                <canvas id="cpu-chart" class="w-full h-24 border border-[var(--border)] bg-black"></canvas>
+                <div class="text-xs text-gray-400">CPU: <span id="cpu-val" style="color:var(--accent)">12%</span></div>
+                <div class="mt-auto border-t border-[var(--border)] pt-2">
+                    <div class="text-[10px] text-gray-500">CACHE: <span class="text-green-500">ATIVO</span></div>
+                </div>
             </div>
         </div>
 
         <!-- CENTER (TERMINAL) -->
-        <div class="panel" id="p-center" style="grid-column: 2; grid-row: 2;">
+        <div class="panel power-off" id="p-center" style="grid-column: 2; grid-row: 2;">
             <div class="panel-header">TERMINAL</div>
             <div id="term-out"></div>
-            <div class="bg-black p-2 flex items-center border-t border-[#333]">
-                <span class="text-green-500 mr-2 font-bold">root@kaua:~$</span>
+            <div class="bg-black p-2 flex items-center border-t border-[var(--border)]">
+                <span style="color:var(--accent)" class="mr-2 font-bold">root@kaua:~$</span>
                 <input id="cmd-input" type="text" class="bg-transparent border-none outline-none text-white flex-1 font-mono" autocomplete="off">
             </div>
         </div>
 
         <!-- RIGHT (GLOBE) -->
-        <div class="panel" id="p-right" style="grid-column: 3; grid-row: 2;">
+        <div class="panel power-off" id="p-right" style="grid-column: 3; grid-row: 2;">
             <div class="panel-header">REDE</div>
             <div class="flex-1 bg-black flex items-center justify-center relative">
                 <canvas id="globe-canvas"></canvas>
-                <div class="absolute bottom-2 right-2 text-[9px] text-gray-500">CONN: ENCRYPTED</div>
             </div>
         </div>
 
         <!-- FILES -->
-        <div class="panel" id="p-files" style="grid-column: 2; grid-row: 3; width: 40%; float: left; margin-right: 5px;">
+        <div class="panel power-off" id="p-files" style="grid-column: 2; grid-row: 3; width: 40%; float: left; margin-right: 5px;">
             <div class="panel-header">
                 <span>ARQUIVOS</span>
-                <button onclick="document.getElementById('new-file-modal').style.display='flex'" class="text-[9px] hover:text-green-400 cursor-pointer">[NEW FILE]</button>
+                <button onclick="UI.openModal('modal-new')" class="text-[9px] hover:text-[var(--accent)] cursor-pointer">[+] NOVO</button>
             </div>
             <div id="file-grid" class="p-2 grid grid-cols-4 gap-2 content-start overflow-y-auto h-full"></div>
         </div>
 
         <!-- KEYBOARD -->
-        <div class="panel" id="p-keyboard" style="grid-column: 2 / 4; grid-row: 3; width: auto; margin-left: 41%;">
+        <div class="panel power-off" id="p-keyboard" style="grid-column: 2 / 4; grid-row: 3; width: auto; margin-left: 41%;">
             <div class="panel-header">INPUT</div>
             <div id="kb-container" class="p-2 h-full flex flex-col justify-center gap-1"></div>
         </div>
     </div>
 
     <script>
-        // --- AUDIO SYSTEM ---
+        // --- CORE AUDIO ---
         const AudioSys = {
             ctx: null,
             init() {
@@ -300,231 +331,303 @@
             play(type) {
                 if (!this.ctx) this.init();
                 if (this.ctx.state === 'suspended') this.ctx.resume();
-                
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
+                osc.connect(gain); gain.connect(this.ctx.destination);
                 const now = this.ctx.currentTime;
                 
-                if (type === 'click') {
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(800, now);
-                    gain.gain.setValueAtTime(0.05, now);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                if (type === 'type') {
+                    osc.type = 'triangle'; osc.frequency.setValueAtTime(800, now);
+                    gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
                     osc.start(now); osc.stop(now + 0.05);
-                } else if (type === 'enter') {
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(400, now);
-                    osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
-                    gain.gain.setValueAtTime(0.05, now);
-                    gain.gain.linearRampToValueAtTime(0, now + 0.1);
-                    osc.start(now); osc.stop(now + 0.1);
+                } else if (type === 'boot') {
+                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, now);
+                    osc.frequency.linearRampToValueAtTime(600, now + 0.3);
+                    gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.5);
+                    osc.start(now); osc.stop(now + 0.5);
                 }
             }
         };
 
-        // --- FILE SYSTEM ---
+        // --- FILE SYSTEM (PERSISTENT) ---
         const FS = {
-            files: {
-                'welcome.html': { type: 'web', content: '<h1>Bem-vindo ao KAUÃ_OS</h1><p>Clique em [NEW FILE] para começar.</p>' }
+            files: {},
+            init() {
+                const saved = localStorage.getItem('kaua_os_files');
+                if(saved) this.files = JSON.parse(saved);
+                else this.reset();
+            },
+            save() {
+                localStorage.setItem('kaua_os_files', JSON.stringify(this.files));
+                UI.renderFiles();
+            },
+            reset() {
+                this.files = {
+                    'index.html': { type: 'web', content: '<!-- WebContainer Simulado -->\n<h1>Olá Mundo!</h1>\n<script>\n  console.log("Sistema pronto.");\n<\/script>' },
+                    'notes.txt': { type: 'text', content: 'Ideias de Projeto:\n1. Dominar o mundo.\n2. Aprender React.' }
+                };
+                this.save();
             },
             addFile(name, type, content) {
                 this.files[name] = { type, content };
-                UI.renderFiles();
-            }
-        };
-
-        // --- OS LOGIC ---
-        const OS = {
-            boot() {
-                document.getElementById('start-overlay').style.display = 'none';
-                document.getElementById('desktop-grid').style.opacity = '1';
-                AudioSys.init(); AudioSys.play('enter');
-                UI.init();
-                Term.print("Sistema Inicializado.", "text-green-500");
+                this.save();
             },
-            createFile(lang) {
-                const nameInput = document.getElementById('new-filename');
-                let name = nameInput.value.trim();
-                if(!name) name = "untitled";
-                
-                let ext = "", type = "console", content = "";
-                
-                switch(lang) {
-                    case 'html': 
-                        ext = ".html"; type = "web"; 
-                        content = "<h1>Novo Site</h1>\n<button onclick='alert(\"Funciona!\")'>Clique</button>"; 
-                        break;
-                    case 'python': 
-                        ext = ".py"; type = "console"; 
-                        content = "print('Executando Python...')\nval = 10 + 20\nprint('Resultado: ' + str(val))"; 
-                        break;
-                    case 'java': 
-                        ext = ".java"; type = "console"; 
-                        content = "public class Main {\n  public static void main(String[] args) {\n    System.out.println('Executando Java...');\n  }\n}"; 
-                        break;
-                    case 'cpp': 
-                        ext = ".cpp"; type = "console"; 
-                        content = "#include <iostream>\nusing namespace std;\nint main() {\n  cout << 'Executando C++...' << endl;\n  return 0;\n}"; 
-                        break;
-                    case 'csharp': 
-                        ext = ".cs"; type = "console"; 
-                        content = "using System;\nclass Program {\n  static void Main() {\n    Console.WriteLine('Executando C#...');\n  }\n}"; 
-                        break;
-                }
-                
-                FS.addFile(name + ext, type, content);
-                document.getElementById('new-file-modal').style.display = 'none';
-                nameInput.value = "";
-                Canvas.open(name + ext);
+            exportZip() {
+                const zip = new JSZip();
+                Object.keys(this.files).forEach(name => {
+                    zip.file(name, this.files[name].content);
+                });
+                zip.generateAsync({type:"blob"}).then(function(content) {
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(content);
+                    link.download = "projeto_kaua_os.zip";
+                    link.click();
+                });
+                Term.print("Download do ZIP iniciado.", "text-green-500");
+                UI.closeModal('modal-settings');
             }
         };
 
-        // --- CANVAS (GEMINI STYLE) ---
+        // --- CANVAS (IDE) ---
         const Canvas = {
             el: document.getElementById('immersive-canvas'),
             editor: document.getElementById('editor-area'),
-            web: document.getElementById('web-preview'),
-            console: document.getElementById('console-preview'),
-            logs: document.getElementById('console-logs'),
-            currentFile: null,
+            webFrame: document.getElementById('web-preview'),
+            consoleFrame: document.getElementById('console-preview'),
+            errorOverlay: document.getElementById('error-overlay'),
+            
+            openTabs: [],
+            activeTab: null,
 
             open(filename) {
-                const file = FS.files[filename];
-                if (!file) return Term.print("Arquivo não encontrado.", "text-red-500");
+                if(!this.openTabs.includes(filename)) this.openTabs.push(filename);
+                this.activeTab = filename;
                 
-                this.currentFile = filename;
-                document.getElementById('canvas-filename').innerText = filename.toUpperCase();
-                this.editor.value = file.content;
                 this.el.style.display = 'flex';
-                document.getElementById('desktop-grid').style.filter = "blur(5px)";
-
-                if (file.type === 'web') {
-                    this.web.style.display = 'block';
-                    this.console.style.display = 'none';
-                    this.runWeb();
-                } else {
-                    this.web.style.display = 'none';
-                    this.console.style.display = 'block';
-                    this.logs.innerHTML = "<div class='text-gray-500'>Pronto para executar...</div>";
-                }
-                AudioSys.play('enter');
+                document.getElementById('desktop-grid').style.filter = 'blur(10px)';
+                
+                this.renderTabs();
+                this.loadContent();
             },
+            
+            closeTab(filename, e) {
+                e.stopPropagation();
+                this.openTabs = this.openTabs.filter(t => t !== filename);
+                if(this.openTabs.length === 0) this.close();
+                else if(this.activeTab === filename) this.open(this.openTabs[this.openTabs.length-1]);
+                else this.renderTabs();
+            },
+
+            renderTabs() {
+                const bar = document.getElementById('tabs-bar');
+                bar.innerHTML = '';
+                this.openTabs.forEach(f => {
+                    const tab = document.createElement('div');
+                    tab.className = `tab ${f === this.activeTab ? 'active' : ''}`;
+                    tab.innerHTML = `<span>${f}</span> <span class="tab-close" onclick="Canvas.closeTab('${f}', event)">x</span>`;
+                    tab.onclick = () => this.open(f);
+                    bar.appendChild(tab);
+                });
+            },
+
+            loadContent() {
+                const file = FS.files[this.activeTab];
+                if(file) this.editor.value = file.content;
+                this.errorOverlay.style.display = 'none';
+                
+                if(file.type === 'web' || this.activeTab.endsWith('.html')) {
+                    this.webFrame.style.display = 'block';
+                    this.consoleFrame.style.display = 'none';
+                    this.runWeb(true); // Preview silent
+                } else {
+                    this.webFrame.style.display = 'none';
+                    this.consoleFrame.style.display = 'block';
+                    this.consoleFrame.innerHTML = "<div class='opacity-50'>// Aguardando execução...</div>";
+                }
+            },
+
             close() {
                 this.el.style.display = 'none';
-                document.getElementById('desktop-grid').style.filter = "none";
-                if(this.currentFile) FS.files[this.currentFile].content = this.editor.value;
+                document.getElementById('desktop-grid').style.filter = 'none';
+                if(this.activeTab) FS.files[this.activeTab].content = this.editor.value;
+                FS.save();
             },
+
+            // SAFE EXECUTION ENGINE
             run() {
-                AudioSys.play('enter');
-                const content = this.editor.value;
-                const file = FS.files[this.currentFile];
-                file.content = content; // Auto-save
+                const code = this.editor.value;
+                FS.files[this.activeTab].content = code;
+                FS.save();
+                this.errorOverlay.style.display = 'none';
 
-                if (file.type === 'web') this.runWeb();
-                else this.runConsole(content);
+                if(this.activeTab.endsWith('.html')) this.runWeb();
+                else if(this.activeTab.endsWith('.js')) this.runJS(code);
+                else this.runSimulated(code);
             },
-            runWeb() {
-                this.web.srcdoc = this.editor.value;
+
+            runWeb(silent = false) {
+                const code = this.editor.value;
+                // Basic Error Check
+                if(code.includes('<div') && !code.includes('</div>')) {
+                    if(!silent) this.showError("Syntax Error: Tag <div> não foi fechada.");
+                    return;
+                }
+                
+                const frameDoc = this.webFrame.contentWindow.document;
+                frameDoc.open();
+                // Inject Error Catcher in Iframe
+                frameDoc.write(`<script>window.onerror = function(msg, url, line) { window.parent.postMessage({type:'error', msg: msg + ' (Linha ' + line + ')'}, '*'); }<\/script>` + code);
+                frameDoc.close();
             },
-            runConsole(code) {
-                this.logs.innerHTML = "";
+
+            runJS(code) {
+                this.consoleFrame.innerHTML = "";
+                // Loop Guard
+                const safeCode = this.injectLoopGuard(code);
+                try {
+                    const log = (msg) => this.consoleFrame.innerHTML += `<div class="text-green-400">> ${msg}</div>`;
+                    // Mock Console
+                    const console = { log: log, error: (m)=>this.showError(m) };
+                    eval(safeCode);
+                } catch(e) {
+                    this.showError(e.message);
+                }
+            },
+
+            runSimulated(code) {
+                this.consoleFrame.innerHTML = "";
                 const lines = code.split('\n');
+                let foundOutput = false;
                 lines.forEach((line, i) => {
-                    // Simulação de Output para várias linguagens
+                    // Python/Java Mocking
                     let out = null;
-                    // Python
-                    if (line.match(/print\s*\((.*)\)/)) out = line.match(/print\s*\((.*)\)/)[1];
-                    // Java / C#
-                    else if (line.match(/(System\.out\.println|Console\.WriteLine)\s*\((.*)\)/)) out = line.match(/(System\.out\.println|Console\.WriteLine)\s*\((.*)\)/)[2];
-                    // C++
-                    else if (line.match(/cout\s*<<\s*(.*)/)) out = line.match(/cout\s*<<\s*(.*)/)[1].replace('<< endl', '').replace(';', '');
-
-                    if (out) {
-                        out = out.replace(/["']/g, ''); // Remove aspas
+                    if(line.match(/print\((.*)\)/)) out = line.match(/print\((.*)\)/)[1];
+                    else if(line.match(/System.out.println\((.*)\)/)) out = line.match(/System.out.println\((.*)\)/)[1];
+                    
+                    if(out) {
+                        foundOutput = true;
                         setTimeout(() => {
-                            const d = document.createElement('div');
-                            d.className = "text-green-400 mb-1 border-l-2 border-green-800 pl-2";
-                            d.innerText = "> " + out;
-                            this.logs.appendChild(d);
-                        }, i * 200);
+                            this.consoleFrame.innerHTML += `<div class="text-blue-400 border-l border-blue-800 pl-2 mb-1">> ${out.replace(/["']/g, '')}</div>`;
+                        }, i * 100);
                     }
                 });
-                if(!this.logs.hasChildNodes()) {
-                     this.logs.innerHTML = "<div class='text-yellow-500'>Compilação simulada concluída. (Sem saída detectada)</div>";
-                }
+                if(!foundOutput) this.consoleFrame.innerHTML = "<div class='text-yellow-500'>Compilação concluída (Sem saída).</div>";
+            },
+
+            injectLoopGuard(code) {
+                // Simplistic loop guard to prevent browser crash
+                return `let _loopLimit = 1000; ${code.replace(/while\s*\((.*?)\)/g, 'while($1 && _loopLimit-- > 0)').replace(/for\s*\((.*?)\)/g, 'for($1) if(_loopLimit-- <= 0) break;')}`;
+            },
+
+            showError(msg) {
+                this.errorOverlay.style.display = 'block';
+                document.getElementById('error-msg').innerText = msg;
+                AudioSys.play('type');
             }
         };
 
-        // --- UI & KEYBOARD FIX ---
+        // Listen for Iframe Errors
+        window.addEventListener('message', (e) => {
+            if(e.data.type === 'error') Canvas.showError(e.data.msg);
+        });
+
+        // --- OS BOOT & UI ---
+        const OS = {
+            boot() {
+                const ol = document.getElementById('start-overlay');
+                const fill = document.getElementById('boot-fill');
+                
+                AudioSys.init(); AudioSys.play('boot');
+                fill.style.width = "100%";
+                
+                setTimeout(() => {
+                    ol.style.opacity = '0';
+                    setTimeout(() => ol.style.display = 'none', 500);
+                    this.startHouseLights();
+                }, 1000);
+            },
+
+            startHouseLights() {
+                const panels = ['p-header', 'p-left', 'p-center', 'p-right', 'p-files', 'p-keyboard'];
+                panels.forEach((id, idx) => {
+                    setTimeout(() => {
+                        const el = document.getElementById(id);
+                        el.classList.remove('power-off');
+                        el.classList.add('power-on');
+                        AudioSys.play('type');
+                    }, idx * 200);
+                });
+                
+                setTimeout(() => {
+                    FS.init();
+                    UI.init();
+                    Term.print("KAUÃ_OS V11 ONLINE.", "text-green-500");
+                }, 1500);
+            },
+
+            createFile(ext) {
+                const name = document.getElementById('new-filename').value || 'untitled';
+                let content = "", type = "code";
+                
+                if(ext === 'html') { content = "<h1>Ola</h1>"; type = "web"; }
+                else if(ext === 'js') { content = "console.log('JS Rodando');"; type = "code"; }
+                else if(ext === 'py') { content = "print('Python Simulado')"; type = "code"; }
+                
+                FS.addFile(name + '.' + ext, type, content);
+                UI.closeModal('modal-new');
+                Canvas.open(name + '.' + ext);
+            }
+        };
+
         const UI = {
             init() {
                 this.renderFiles();
-                this.renderKeyboard();
+                this.renderKeys();
                 this.startGlobe();
+                // Load Theme
+                const t = localStorage.getItem('kaua_theme');
+                if(t) document.body.className = t;
             },
+            
             renderFiles() {
                 const g = document.getElementById('file-grid');
                 g.innerHTML = '';
                 Object.keys(FS.files).forEach(f => {
-                    const div = document.createElement('div');
-                    div.className = "flex flex-col items-center cursor-pointer hover:bg-white/10 p-2 rounded text-[10px] text-gray-400";
-                    let icon = 'file-code';
-                    if(f.endsWith('.html')) icon = 'globe';
-                    else if(f.endsWith('.py') || f.endsWith('.java')) icon = 'terminal';
-                    
-                    div.innerHTML = `<i data-lucide="${icon}" class="mb-1 w-5 h-5"></i>${f}`;
-                    div.onclick = () => Canvas.open(f);
-                    g.appendChild(div);
+                    const d = document.createElement('div');
+                    d.className = "flex flex-col items-center cursor-pointer hover:bg-white/10 p-2 rounded text-[10px] text-gray-400";
+                    let icon = f.endsWith('.html') ? 'globe' : (f.endsWith('.txt') ? 'file-text' : 'code');
+                    d.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5 mb-1"></i>${f}`;
+                    d.onclick = () => Canvas.open(f);
+                    g.appendChild(d);
                 });
                 lucide.createIcons();
             },
-            renderKeyboard() {
+            
+            renderKeys() {
                 const k = document.getElementById('kb-container');
-                const rows = ["1234567890", "QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
                 k.innerHTML = '';
-                rows.forEach(r => {
-                    const d = document.createElement('div');
-                    d.className = "flex justify-center gap-1 w-full mb-1";
-                    r.split('').forEach(char => {
+                ["1234567890", "QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"].forEach(row => {
+                    const r = document.createElement('div');
+                    r.className = "flex gap-1 justify-center w-full mb-1";
+                    row.split('').forEach(char => {
                         const key = document.createElement('div');
-                        key.className = "key flex-1 h-8"; key.innerText = char;
-                        key.dataset.key = char;
-                        key.onmousedown = () => UI.triggerKey(char);
-                        d.appendChild(key);
+                        key.className = "key flex-1 h-8"; key.innerText = char; key.dataset.key = char;
+                        key.onmousedown = () => { document.getElementById('cmd-input').value += char; AudioSys.play('type'); };
+                        r.appendChild(key);
                     });
-                    k.appendChild(d);
+                    k.appendChild(r);
                 });
-                const sp = document.createElement('div'); sp.className="flex justify-center";
-                sp.innerHTML=`<div class="key w-1/2 h-8" data-key="SPACE" onclick="UI.triggerKey(' ')">SPACE</div>`;
-                k.appendChild(sp);
             },
-            // FIX: Feedback visual garantido
-            triggerKey(char) {
-                const input = document.getElementById('cmd-input');
-                const keyEl = document.querySelector(`.key[data-key="${char === ' ' ? 'SPACE' : char}"]`);
-                
-                if (keyEl) {
-                    keyEl.classList.add('active');
-                    setTimeout(() => keyEl.classList.remove('active'), 150);
-                }
-                
-                input.value += char;
-                input.focus();
-                AudioSys.play('click');
-            },
+
             startGlobe() {
                 const cvs = document.getElementById('globe-canvas');
                 const ctx = cvs.getContext('2d');
                 let t = 0;
                 function loop() {
                     if(!cvs.parentElement) return;
-                    cvs.width = cvs.parentElement.offsetWidth;
-                    cvs.height = cvs.parentElement.offsetHeight;
+                    cvs.width = cvs.parentElement.offsetWidth; cvs.height = cvs.parentElement.offsetHeight;
                     ctx.fillStyle = 'black'; ctx.fillRect(0,0,cvs.width,cvs.height);
-                    t+=0.02;
-                    ctx.fillStyle = '#00ff41';
+                    t+=0.02; ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--accent');
                     const cx=cvs.width/2, cy=cvs.height/2;
                     for(let i=0; i<60; i++) {
                         const a = (i/60)*6.28 + t;
@@ -534,39 +637,39 @@
                     requestAnimationFrame(loop);
                 }
                 loop();
+            },
+
+            openModal(id) { document.getElementById(id).style.display = 'flex'; },
+            closeModal(id) { document.getElementById(id).style.display = 'none'; },
+            setTheme(name) { 
+                document.body.className = name; 
+                localStorage.setItem('kaua_theme', name);
+                this.closeModal('modal-settings');
             }
         };
 
-        // --- TERMINAL ---
         const Term = {
-            print(msg, cls='') {
-                const d = document.createElement('div'); d.className=cls; d.innerHTML=msg;
-                const out = document.getElementById('term-out');
-                out.appendChild(d); out.scrollTop = out.scrollHeight;
+            print(msg, cls) { 
+                const d = document.createElement('div'); d.className=cls; d.innerText=msg;
+                const o = document.getElementById('term-out'); o.appendChild(d); o.scrollTop = o.scrollHeight; 
             }
         };
 
-        // --- EVENTS ---
-        document.getElementById('cmd-input').addEventListener('keydown', e => {
-            if(e.key === 'Enter') {
-                const val = e.target.value.trim();
-                Term.print(`root@kaua:~$ ${val}`, 'cmd-line');
-                const cmd = val.split(' ');
-                if(cmd[0] === 'code' && cmd[1]) Canvas.open(cmd[1]);
-                else if(cmd[0] === 'ls') Object.keys(FS.files).forEach(f => Term.print(f, 'text-blue-400'));
-                else if(cmd[0] === 'clear') document.getElementById('term-out').innerHTML = '';
-                else Term.print("Comando inválido.", "text-gray-500");
-                e.target.value = '';
-                AudioSys.play('enter');
-            } else {
-                // Feedback visual ao digitar no teclado físico
-                const char = e.key.toUpperCase();
-                const keyEl = document.querySelector(`.key[data-key="${char === ' ' ? 'SPACE' : char}"]`);
-                if (keyEl) {
-                    keyEl.classList.add('active');
-                    setTimeout(() => keyEl.classList.remove('active'), 150);
-                }
-                AudioSys.play('click');
+        // Key Listeners
+        window.addEventListener('keydown', e => {
+            const k = document.querySelector(`.key[data-key="${e.key.toUpperCase()}"]`);
+            if(k) { k.classList.add('active'); setTimeout(()=>k.classList.remove('active'),150); AudioSys.play('type'); }
+            
+            if(e.key === 'Enter' && document.activeElement === document.getElementById('cmd-input')) {
+                const val = document.getElementById('cmd-input').value;
+                Term.print(`root:~$ ${val}`, 'cmd-line');
+                const [cmd, arg] = val.split(' ');
+                if(cmd === 'code') Canvas.open(arg);
+                else if(cmd === 'ls') Object.keys(FS.files).forEach(f => Term.print(f, 'text-gray-400'));
+                else if(cmd === 'help') Term.print("COMANDOS: code, ls, help, clear", "text-gray-400");
+                else if(cmd === 'clear') document.getElementById('term-out').innerHTML = "";
+                document.getElementById('cmd-input').value = '';
+                AudioSys.play('type');
             }
         });
 
