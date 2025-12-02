@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KAUÃ_OS // V14_ULTIMATE</title>
+    <title>KAUÃ_OS // V15_UNCHAINED</title>
     
     <!-- Bibliotecas Externas -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -102,7 +102,7 @@
         }
         .ui-input:focus { border-color: var(--accent); }
 
-        /* --- IMMERSIVE CANVAS --- */
+        /* --- IMMERSIVE CANVAS V2 --- */
         #immersive-canvas {
             position: fixed; inset: 0; z-index: 100;
             background: var(--bg);
@@ -154,6 +154,12 @@
             display: none; z-index: 20;
         }
         .error-title { color: var(--danger); font-weight: bold; margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
+
+        /* Loader Overlay for Preview Reset */
+        #preview-loader {
+            position: absolute; inset: 0; background: #111; z-index: 15;
+            display: none; align-items: center; justify-content: center; color: white;
+        }
 
         #editor-area {
             flex: 1; background: transparent; color: #d4d4d4; border: none; outline: none;
@@ -220,7 +226,7 @@
 
     <!-- START SCREEN -->
     <div id="start-overlay" onclick="OS.boot()">
-        <div class="text-4xl font-bold text-white mb-2 tracking-tighter">KAUÃ_OS <span class="text-xs bg-white text-black px-1 rounded">V14</span></div>
+        <div class="text-4xl font-bold text-white mb-2 tracking-tighter">KAUÃ_OS <span class="text-xs bg-white text-black px-1 rounded">V15</span></div>
         <div class="text-xs text-gray-500 blink-text">CLIQUE PARA INICIAR SISTEMA</div>
         <div class="loader-bar"><div class="loader-fill" id="boot-fill"></div></div>
     </div>
@@ -293,12 +299,13 @@
             </div>
             <div class="preview-pane" id="preview-container">
                 <button class="fullscreen-exit-btn" onclick="Canvas.toggleFullscreenPreview()">SAIR DA TELA CHEIA</button>
+                <div id="preview-loader">REINICIANDO...</div>
                 <iframe id="web-preview" class="w-full h-full border-none bg-white"></iframe>
                 <div id="console-preview" class="w-full h-full p-4 font-mono text-sm overflow-auto text-[var(--accent)] hidden bg-[#050505]"></div>
                 
                 <!-- Error Overlay -->
                 <div id="error-overlay">
-                    <div class="error-title"><i data-lucide="alert-triangle" class="w-4 h-4"></i> ERRO DETECTADO:</div>
+                    <div class="error-title"><i data-lucide="alert-triangle" class="w-4 h-4"></i> ERRO DE EXECUÇÃO:</div>
                     <div id="error-msg" class="text-gray-300 mb-2"></div>
                     <button class="btn btn-ai w-full justify-center" onclick="AI.fixCode()">TENTAR CORREÇÃO AUTOMÁTICA</button>
                 </div>
@@ -312,7 +319,7 @@
         <div class="panel power-off" id="p-header" style="grid-column: 1 / -1; grid-row: 1;">
             <div class="flex items-center justify-between h-full px-4">
                 <div class="font-bold text-lg flex gap-2 items-center">
-                    KAUÃ_OS <span class="text-[10px] border border-[var(--accent)] px-1 rounded text-[var(--accent)]">V14</span>
+                    KAUÃ_OS <span class="text-[10px] border border-[var(--accent)] px-1 rounded text-[var(--accent)]">V15</span>
                 </div>
                 <div class="flex gap-4 items-center">
                     <button onclick="UI.openModal('modal-settings')" class="text-[10px] hover:text-[var(--accent)] transition">OPÇÕES</button>
@@ -514,6 +521,7 @@
             consoleFrame: document.getElementById('console-preview'),
             previewContainer: document.getElementById('preview-container'),
             errorOverlay: document.getElementById('error-overlay'),
+            loader: document.getElementById('preview-loader'),
             
             openTabs: [],
             activeTab: null,
@@ -578,23 +586,36 @@
                 FS.files[this.activeTab].content = code;
                 FS.save();
                 
-                // IMPORTANT: Reset State
+                // IMPORTANT: Reset State Forcefully
                 this.errorOverlay.style.display = 'none';
                 this.consoleFrame.innerHTML = '';
-
-                if(this.activeTab.endsWith('.html')) this.runWeb();
-                else if(this.activeTab.endsWith('.js')) this.runJS(code);
-                else this.runSimulated(code);
+                
+                // Show Loader to indicate refresh
+                this.loader.style.display = 'flex';
+                
+                setTimeout(() => {
+                    this.loader.style.display = 'none';
+                    if(this.activeTab.endsWith('.html')) this.runWeb();
+                    else if(this.activeTab.endsWith('.js')) this.runJS(code);
+                    else this.runSimulated(code);
+                }, 200);
             },
 
             runWeb() {
                 const code = this.editor.value;
-                const frameDoc = this.webFrame.contentWindow.document;
-                frameDoc.open();
-                // Inject Error Catcher in Iframe safely
-                const safeScript = `<script>window.onerror = function(msg, url, line) { window.parent.postMessage({type:'error', msg: msg + ' (Linha ' + line + ')'}, '*'); }<` + `/script>`;
-                frameDoc.write(safeScript + code);
-                frameDoc.close();
+                // No blocking checks! Let it crash if bad.
+                
+                // Reset Iframe via about:blank first
+                this.webFrame.src = 'about:blank';
+                
+                setTimeout(() => {
+                    const frameDoc = this.webFrame.contentWindow.document;
+                    frameDoc.open();
+                    // Inject Error Catcher in Iframe safely
+                    const safeScript = `<script>window.onerror = function(msg, url, line) { window.parent.postMessage({type:'error', msg: msg + ' (Linha ' + line + ')'}, '*'); }<` + `/script>`;
+                    frameDoc.write(safeScript + code);
+                    frameDoc.close();
+                }, 50);
             },
 
             runJS(code) {
@@ -679,7 +700,7 @@
                 setTimeout(() => {
                     FS.init();
                     UI.init();
-                    Term.print("KAUÃ_OS V14 ONLINE.", "text-green-500");
+                    Term.print("KAUÃ_OS V15 ONLINE.", "text-green-500");
                 }, 2000);
             },
 
