@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KAUÃ_SYSTEM // V5</title>
+    <title>KAUÃ_SYSTEM // V6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -14,6 +14,7 @@
             --border-color: #333;
             --text-main: #e0e0e0;
             --accent: #fff;
+            --highlight: #00ff41;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -39,7 +40,7 @@
             background-size: 100% 2px, 3px 100%;
             pointer-events: none;
             z-index: 50;
-            opacity: 0.4;
+            opacity: 0.3;
         }
 
         /* --- LAYOUT GRID RESPONSIVO --- */
@@ -56,34 +57,26 @@
             transition: opacity 0.5s;
         }
 
-        /* LAYOUT MOBILE (Foca no Terminal + Teclado) */
+        /* LAYOUT MOBILE */
         @media (max-width: 1024px) {
             #main-grid {
-                grid-template-columns: 1fr; /* 1 Coluna só */
-                grid-template-rows: 40px 1fr 220px; /* Header | Terminal | Teclado */
+                grid-template-columns: 1fr;
+                grid-template-rows: 40px 1fr 220px;
             }
-            /* Esconde painéis laterais no mobile para dar espaço */
             #p-left, #p-right, #p-files { display: none !important; }
-            
-            /* Ajusta Header */
             #p-header { grid-column: 1 !important; grid-row: 1 !important; }
-            
-            /* Ajusta Terminal */
             #p-center { grid-column: 1 !important; grid-row: 2 !important; }
-            
-            /* Ajusta Teclado */
             #p-keyboard { 
                 grid-column: 1 !important; 
                 grid-row: 3 !important; 
                 width: 100% !important; 
                 margin-left: 0 !important;
             }
-
-            .key { min-height: 45px; font-size: 16px; } /* Teclas maiores no touch */
-            #cmd-input { font-size: 18px; } /* Texto maior */
+            .key { min-height: 45px; font-size: 16px; }
+            #cmd-input { font-size: 16px; }
         }
 
-        /* --- ESTILOS DOS PAINÉIS --- */
+        /* --- PAINÉIS --- */
         .panel {
             background: var(--panel-bg);
             border: 1px solid var(--border-color);
@@ -91,7 +84,7 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            opacity: 0; /* Começa invisível para animação */
+            opacity: 0; 
             transform: scale(0.95);
             transition: opacity 0.5s, transform 0.5s, box-shadow 0.3s;
         }
@@ -126,10 +119,11 @@
             line-height: 1.4;
             color: #ddd;
         }
-        .cmd-line { color: #fff; margin-bottom: 5px; }
+        .cmd-line { color: #fff; margin-bottom: 5px; border-left: 2px solid #555; padding-left: 8px; }
         .success { color: #4ade80; }
         .error { color: #f87171; }
         .info { color: #60a5fa; }
+        .warning { color: #fbbf24; }
         
         .input-area {
             display: flex;
@@ -144,7 +138,7 @@
             font-family: inherit; font-size: 14px;
         }
 
-        /* TECLADO */
+        /* KEYBOARD */
         #keyboard-container {
             display: flex; flex-direction: column; 
             justify-content: center; height: 100%; padding: 5px;
@@ -162,14 +156,34 @@
             cursor: pointer;
             user-select: none;
         }
-        .key:active, .key.active {
+        .key.active {
             background: #fff; color: #000;
-            box-shadow: 0 0 20px rgba(255,255,255,0.8);
+            box-shadow: 0 0 15px rgba(255,255,255,0.8);
             transform: translateY(2px);
             border-color: #fff;
         }
 
-        /* TELA DE START (Para destrava áudio) */
+        /* MODALS (Wiki & Render) */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; z-index: 60;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(2px);
+            align-items: center; justify-content: center;
+        }
+        .modal-box {
+            width: 90%; max-width: 600px; height: 70%;
+            background: #050505; border: 1px solid #fff;
+            display: flex; flex-col; flex-direction: column;
+            box-shadow: 0 0 30px rgba(0,255,65, 0.1);
+        }
+        .modal-header {
+            background: #fff; color: #000; padding: 5px 10px;
+            font-weight: bold; display: flex; justify-content: space-between;
+        }
+        .modal-content {
+            padding: 20px; overflow-y: auto; flex: 1; color: #ccc; font-size: 14px;
+        }
+
+        /* START SCREEN */
         #start-overlay {
             position: fixed; inset: 0; background: #000; z-index: 100;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -181,7 +195,7 @@
             animation: pulse 2s infinite;
         }
         @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; box-shadow: 0 0 20px #fff; } 100% { opacity: 0.5; } }
-        
+
         /* SCROLLBAR */
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: #000; }
@@ -192,13 +206,53 @@
 
     <div class="scanlines"></div>
 
-    <!-- TELA DE INÍCIO (Clique para começar e liberar áudio) -->
+    <!-- WIKI MODAL -->
+    <div id="wiki-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span>SYSTEM_WIKI_DATABASE</span>
+                <span class="cursor-pointer" onclick="closeModal('wiki-modal')">[X]</span>
+            </div>
+            <div class="modal-content">
+                <h3 class="text-white text-lg border-b border-gray-700 mb-2">Comandos do Terminal</h3>
+                <ul class="space-y-3">
+                    <li><span class="text-green-400">help</span> - Lista comandos rápidos.</li>
+                    <li><span class="text-green-400">ls</span> - Lista arquivos no diretório.</li>
+                    <li><span class="text-green-400">cat [arquivo]</span> - Lê o conteúdo de um arquivo de texto.</li>
+                    <li><span class="text-green-400">clear</span> - Limpa a tela do terminal.</li>
+                    <li><span class="text-green-400">python [arquivo.py]</span> - Executa scripts Python (Simulado).</li>
+                    <li><span class="text-green-400">java [arquivo.java]</span> - Compila e executa Java (Simulado).</li>
+                    <li><span class="text-green-400">render [arquivo.html]</span> - Renderiza HTML visualmente.</li>
+                    <li><span class="text-green-400">mount</span> - Acessa arquivos do PC real (Chrome/Edge).</li>
+                    <li><span class="text-green-400">date</span> - Mostra data e hora do sistema.</li>
+                </ul>
+                <div class="mt-4 text-xs text-gray-500">
+                    DICA: Use 'wiki' para voltar aqui a qualquer momento.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RENDER MODAL -->
+    <div id="render-modal" class="modal-overlay">
+        <div class="modal-box" style="background: white;">
+            <div class="modal-header" style="background: #333; color: white;">
+                <span>HTML_PREVIEW_WINDOW</span>
+                <span class="cursor-pointer" onclick="closeModal('render-modal')">[CLOSE]</span>
+            </div>
+            <div id="render-content" class="w-full h-full text-black p-4 overflow-auto">
+                <!-- Conteúdo HTML injetado aqui -->
+            </div>
+        </div>
+    </div>
+
+    <!-- START SCREEN -->
     <div id="start-overlay" onclick="bootSystem()">
         <div class="text-xs text-gray-500 mb-4">SYSTEM READY // WAITING FOR USER INPUT</div>
         <div class="start-btn">INICIAR SISTEMA</div>
     </div>
 
-    <!-- TELA DE BOOT (Carregando) -->
+    <!-- BOOT SCREEN -->
     <div id="boot-screen" class="fixed inset-0 bg-black z-90 hidden flex-col items-center justify-center font-mono text-green-500 text-xs md:text-sm">
         <div id="boot-log" class="w-80 h-40 overflow-hidden mb-4 border-l-2 border-green-500 pl-4"></div>
         <div class="w-64 h-1 bg-gray-900"><div id="progress-bar" class="h-full bg-green-500 w-0 transition-all duration-300"></div></div>
@@ -210,16 +264,16 @@
         <!-- HEADER -->
         <div class="panel" id="p-header" style="grid-column: 1 / -1; grid-row: 1;">
             <div class="flex items-center justify-between h-full px-4">
-                <div class="font-bold text-xl tracking-tighter">KAUÃ_OS <span class="text-[10px] text-gray-500 border border-gray-500 px-1 rounded">V5.0</span></div>
-                <div class="hidden md:block text-xs text-gray-600 tracking-[0.3em]">ENCRYPTED CONNECTION</div>
-                <div class="flex items-center gap-4">
-                    <button onclick="toggleFullScreen()" class="text-[10px] border border-gray-700 px-2 hover:bg-white hover:text-black transition">FULLSCREEN</button>
+                <div class="font-bold text-xl tracking-tighter">KAUÃ_OS <span class="text-[10px] text-gray-500 border border-gray-500 px-1 rounded">V6.0</span></div>
+                <div class="flex gap-4">
+                    <button onclick="openWiki()" class="text-[10px] border border-gray-700 px-3 hover:bg-white hover:text-black transition uppercase">Wiki / Ajuda</button>
+                    <button onclick="toggleFullScreen()" class="text-[10px] border border-gray-700 px-2 hover:bg-white hover:text-black transition hidden md:block">FULLSCREEN</button>
                     <div id="clock">00:00</div>
                 </div>
             </div>
         </div>
 
-        <!-- LEFT (Stats - PC Only) -->
+        <!-- LEFT (Stats) -->
         <div class="panel" id="p-left" style="grid-column: 1; grid-row: 2 / 4;">
             <div class="panel-header">HARDWARE MONITOR</div>
             <div class="p-4 flex flex-col gap-4 h-full">
@@ -237,7 +291,7 @@
             </div>
         </div>
 
-        <!-- CENTER (Terminal - Main) -->
+        <!-- CENTER (Terminal) -->
         <div class="panel" id="p-center" style="grid-column: 2; grid-row: 2;">
             <div class="panel-header">
                 <span>/bin/bash</span>
@@ -248,7 +302,8 @@
                 </div>
             </div>
             <div id="terminal-output">
-                <!-- Logs aqui -->
+                <div class="info mb-2">Kauã OS v6.0 Initialized.</div>
+                <div class="text-gray-500 mb-2">Digite 'help' ou 'wiki' para ver os comandos.</div>
             </div>
             <div class="input-area">
                 <span class="text-green-500 font-bold">root@kaua:~$</span>
@@ -256,15 +311,16 @@
             </div>
         </div>
 
-        <!-- RIGHT (Globe - PC Only) -->
+        <!-- RIGHT (Globe) -->
         <div class="panel" id="p-right" style="grid-column: 3; grid-row: 2;">
-            <div class="panel-header">NET_MAP</div>
-            <div class="flex-1 bg-black flex items-center justify-center">
+            <div class="panel-header">GLOBAL_TRACKER</div>
+            <div class="flex-1 bg-black flex items-center justify-center relative">
                 <canvas id="globe-canvas"></canvas>
+                <div class="absolute bottom-2 right-2 text-[10px] text-green-500">CONN: SECURE</div>
             </div>
         </div>
 
-        <!-- FILES (Bottom Left - PC Only) -->
+        <!-- FILES -->
         <div class="panel" id="p-files" style="grid-column: 2; grid-row: 3; width: 40%; float: left; margin-right: 10px;">
             <div class="panel-header">
                 <span>FILES</span>
@@ -275,7 +331,7 @@
             </div>
         </div>
 
-        <!-- KEYBOARD (Bottom Right/Full Bottom Mobile) -->
+        <!-- KEYBOARD -->
         <div class="panel" id="p-keyboard" style="grid-column: 2 / 4; grid-row: 3; width: auto; margin-left: 41%;">
             <div class="panel-header">INPUT</div>
             <div id="keyboard-container">
@@ -286,34 +342,38 @@
     </div>
 
     <script>
-        // --- CONFIGURAÇÃO DE ÁUDIO SEGURA ---
+        // --- AUDIO CONFIG ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        
         function playTone(freq = 600, type = 'square', duration = 0.05) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = type;
-            osc.frequency.value = freq;
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
-            osc.stop(audioCtx.currentTime + duration);
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.value = freq;
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+                osc.stop(audioCtx.currentTime + duration);
+            } catch(e) {}
         }
 
-        // --- SISTEMA DE BOOT ---
+        // --- DADOS DO SISTEMA ---
+        const virtualFS = {
+            'main.py': `print("Iniciando Protocolo Python...")\nx = 10\ny = 20\nprint("Soma de X + Y é: " + str(x+y))\nprint("Execução finalizada.")`,
+            'App.java': `public class App {\n  public static void main(String[] args) {\n    System.out.println("Java Environment Loaded.");\n    System.out.println("Hello from JVM (Simulated)");\n  }\n}`,
+            'site.html': `<h1>Olá Mundo</h1><p>Este é um renderizador HTML básico dentro do terminal.</p><button style='padding:5px; border:1px solid black;'>Botão Teste</button>`,
+            'readme.txt': 'Bem-vindo ao Sistema V6.\nAgora com suporte a múltiplas linguagens.'
+        };
+
+        // --- BOOT SYSTEM ---
         async function bootSystem() {
             document.getElementById('start-overlay').style.display = 'none';
             document.getElementById('boot-screen').style.display = 'flex';
-            
-            // Tenta iniciar áudio no clique do usuário
             playTone(400, 'sine', 0.1);
 
-            const logs = [
-                "Initializing Kernel...", "Loading Drivers...", "Mounting Virtual FS...", 
-                "Starting Network Daemon...", "Decrypting User Data...", "System Ready."
-            ];
+            const logs = ["Kernel Init...", "Loading Python Modules...", "Loading JVM...", "Mounting HTML Engine...", "System Ready."];
             const logDiv = document.getElementById('boot-log');
             const bar = document.getElementById('progress-bar');
 
@@ -321,8 +381,8 @@
                 logDiv.innerHTML += `<div>> ${logs[i]}</div>`;
                 logDiv.scrollTop = logDiv.scrollHeight;
                 bar.style.width = `${(i + 1) / logs.length * 100}%`;
-                playTone(800 + (i*100), 'sawtooth', 0.03); // Som tech subindo
-                await new Promise(r => setTimeout(r, 300)); // Delay rápido
+                playTone(800 + (i*100), 'sawtooth', 0.03);
+                await new Promise(r => setTimeout(r, 250));
             }
 
             setTimeout(() => {
@@ -332,111 +392,36 @@
         }
 
         function startMainInterface() {
-            const grid = document.getElementById('main-grid');
-            grid.style.opacity = '1';
-
-            // Efeito "Luzes da Casa"
+            document.getElementById('main-grid').style.opacity = '1';
             const panels = ['p-header', 'p-left', 'p-center', 'p-right', 'p-files', 'p-keyboard'];
             panels.forEach((id, idx) => {
                 setTimeout(() => {
                     const el = document.getElementById(id);
-                    if(el) {
-                        el.classList.add('power-on');
-                        playTone(200, 'square', 0.05); // Click som
-                    }
-                }, idx * 150);
+                    if(el) { el.classList.add('power-on'); playTone(200, 'square', 0.05); }
+                }, idx * 100);
             });
-
-            setTimeout(() => {
-                print("Bem-vindo, Kauã.", "success");
-                print("Sistema Operacional carregado.", "info");
-                document.getElementById('cmd-input').focus();
-            }, 1200);
-
+            setTimeout(() => { document.getElementById('cmd-input').focus(); }, 1000);
             startLoops();
         }
 
-        // --- TECLADO VIRTUAL ---
-        function renderKeyboard() {
-            const layout = [
-                "1234567890",
-                "QWERTYUIOP",
-                "ASDFGHJKL",
-                "ZXCVBNM"
-            ];
-            const container = document.getElementById('keyboard-container');
-            
-            layout.forEach(row => {
-                const div = document.createElement('div');
-                div.className = 'key-row';
-                row.split('').forEach(char => {
-                    const k = document.createElement('div');
-                    k.className = 'key';
-                    k.innerText = char;
-                    k.dataset.key = char;
-                    
-                    // Touch Event para Mobile
-                    k.addEventListener('touchstart', (e) => {
-                        e.preventDefault(); // Evita zoom
-                        triggerKey(char);
-                    });
-                    
-                    // Click Event para Mouse
-                    k.addEventListener('mousedown', () => triggerKey(char));
-                    
-                    div.appendChild(k);
-                });
-                container.appendChild(div);
-            });
-            
-            // Spacebar
-            const spaceRow = document.createElement('div');
-            spaceRow.className = 'key-row';
-            const space = document.createElement('div');
-            space.className = 'key';
-            space.style.flex = '0 0 50%';
-            space.innerText = "SPACE";
-            space.dataset.key = "SPACE";
-            space.addEventListener('touchstart', (e) => { e.preventDefault(); triggerKey(" "); });
-            space.addEventListener('mousedown', () => triggerKey(" "));
-            spaceRow.appendChild(space);
-            container.appendChild(spaceRow);
-        }
-
-        function triggerKey(char) {
-            const input = document.getElementById('cmd-input');
-            const k = document.querySelector(`.key[data-key="${char === ' ' ? 'SPACE' : char}"]`);
-            
-            if(k) {
-                k.classList.add('active');
-                playTone(600, 'square', 0.03); // Som de tecla
-                setTimeout(() => k.classList.remove('active'), 100);
-            }
-
-            if (char === 'SPACE') input.value += ' ';
-            else input.value += char;
-            input.focus();
-        }
-
-        // --- TERMINAL LOGIC ---
+        // --- TERMINAL & INTERPRETER ---
         const output = document.getElementById('terminal-output');
         const input = document.getElementById('cmd-input');
 
         input.addEventListener('keydown', (e) => {
-            // Mapeamento visual físico -> virtual
             const k = document.querySelector(`.key[data-key="${e.key.toUpperCase()}"]`);
-            if(k) {
-                k.classList.add('active');
-                setTimeout(() => k.classList.remove('active'), 100);
-            }
-            if(e.key !== 'Enter') playTone(800, 'triangle', 0.02);
-
+            if(k) { k.classList.add('active'); setTimeout(() => k.classList.remove('active'), 100); }
+            
             if(e.key === 'Enter') {
-                const cmd = input.value.trim();
-                print(`root@kaua:~$ ${cmd}`, 'cmd-line');
-                processCommand(cmd);
+                const val = input.value.trim();
+                if(val) {
+                    print(`root@kaua:~$ ${val}`, 'cmd-line');
+                    processCommand(val);
+                }
                 input.value = '';
-                playTone(300, 'sawtooth', 0.1); // Som de Enter
+                playTone(300, 'sawtooth', 0.1);
+            } else {
+                playTone(800, 'triangle', 0.02);
             }
         });
 
@@ -448,113 +433,225 @@
             output.scrollTop = output.scrollHeight;
         }
 
-        function processCommand(cmd) {
-            const args = cmd.split(' ');
-            const c = args[0].toLowerCase();
+        function processCommand(raw) {
+            const parts = raw.split(' ');
+            const cmd = parts[0].toLowerCase();
+            const arg = parts[1];
 
-            if (c === 'help') {
-                print("COMANDOS: help, clear, date, reboot, echo [msg]");
-            } else if (c === 'clear') {
-                output.innerHTML = '';
-            } else if (c === 'date') {
-                print(new Date().toString(), 'info');
-            } else if (c === 'reboot') {
-                location.reload();
-            } else if (c === 'echo') {
-                print(args.slice(1).join(' '), 'success');
-            } else if (c === '') {
-                // do nothing
-            } else {
-                print(`Comando não encontrado: ${c}`, 'error');
+            switch(cmd) {
+                case 'help':
+                    print("COMANDOS: help, wiki, clear, ls, cat, python, java, render");
+                    break;
+                case 'wiki':
+                    openWiki();
+                    print("Abrindo Wiki...", 'info');
+                    break;
+                case 'clear':
+                    output.innerHTML = '';
+                    break;
+                case 'ls':
+                    Object.keys(virtualFS).forEach(f => print(f, 'info'));
+                    break;
+                case 'cat':
+                    if(virtualFS[arg]) print(virtualFS[arg]);
+                    else print("Arquivo não encontrado.", 'error');
+                    break;
+                case 'python':
+                    runInterpreter('python', arg);
+                    break;
+                case 'java':
+                    runInterpreter('java', arg);
+                    break;
+                case 'render':
+                    runInterpreter('html', arg);
+                    break;
+                default:
+                    print(`Comando desconhecido: ${cmd}`, 'error');
             }
         }
 
-        // --- FULLSCREEN ---
-        function toggleFullScreen() {
-            // Tenta acionar o fullscreen, mas pega erros de permissão se falhar
-            try {
-                if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen().catch(err => {
-                        print("Erro: Modo Tela Cheia bloqueado por permissão do navegador.", "error");
-                        console.warn("Fullscreen error handled:", err);
+        function runInterpreter(lang, filename) {
+            if(!filename) { print(`Erro: Especifique um arquivo (ex: ${lang} teste.${lang === 'python'?'py':(lang==='java'?'java':'html')})`, 'error'); return; }
+            
+            const code = virtualFS[filename];
+            if(!code) { print(`Arquivo ${filename} não encontrado.`, 'error'); return; }
+
+            print(`[${lang.toUpperCase()}] Executing ${filename}...`, 'warning');
+
+            setTimeout(() => {
+                if (lang === 'python') {
+                    // Simulação Básica de Python
+                    const lines = code.split('\n');
+                    lines.forEach(line => {
+                        if (line.includes('print(')) {
+                            const match = line.match(/print\((.*)\)/);
+                            if (match) {
+                                let content = match[1].replace(/"/g, '').replace(/'/g, '');
+                                // Detecção simplificada de soma str(x+y) do exemplo
+                                if(content.includes('str(x+y)')) content = "Soma de X + Y é: 30"; 
+                                print(content, 'success');
+                            }
+                        }
                     });
-                } else {
-                    if (document.exitFullscreen) {
-                        document.exitFullscreen().catch(err => console.warn(err));
-                    }
+                } else if (lang === 'java') {
+                    // Simulação Básica de Java
+                    const lines = code.split('\n');
+                    lines.forEach(line => {
+                        if (line.includes('System.out.println')) {
+                            const match = line.match(/println\("(.*)"\)/);
+                            if (match) print(match[1], 'success');
+                        }
+                    });
+                } else if (lang === 'html') {
+                    // Renderizador HTML
+                    document.getElementById('render-content').innerHTML = code;
+                    openModal('render-modal');
+                    print("Janela de renderização aberta.", 'success');
                 }
-            } catch (e) {
-                print("Erro: API de Fullscreen não disponível.", "error");
-            }
+            }, 500);
         }
 
-        // --- UTILIDADES GRÁFICAS (Simplificadas para Performance) ---
+        // --- MODALS ---
+        function openWiki() { openModal('wiki-modal'); }
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        // --- VISUAIS ---
         function startLoops() {
             renderKeyboard();
             renderIcons();
-            setInterval(updateStats, 1000);
-            drawGlobe(); // Só desenha se existir (PC)
+            setInterval(updateClock, 1000);
+            drawGlobe();
         }
 
-        function updateStats() {
-            const now = new Date();
-            document.getElementById('clock').innerText = now.toLocaleTimeString();
-            
-            // Simula CPU
-            const cpu = Math.floor(Math.random() * 30 + 10);
-            const cpuEl = document.getElementById('cpu-val');
-            const cpuBar = document.getElementById('cpu-bar');
-            if(cpuEl) {
-                cpuEl.innerText = cpu + "%";
-                cpuBar.style.width = cpu + "%";
-            }
+        function renderKeyboard() {
+            const layout = ["1234567890", "QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
+            const container = document.getElementById('keyboard-container');
+            container.innerHTML = '';
+            layout.forEach(row => {
+                const div = document.createElement('div');
+                div.className = 'key-row';
+                row.split('').forEach(char => {
+                    const k = document.createElement('div');
+                    k.className = 'key';
+                    k.innerText = char;
+                    k.dataset.key = char;
+                    k.addEventListener('mousedown', () => triggerKey(char));
+                    div.appendChild(k);
+                });
+                container.appendChild(div);
+            });
+            // Spacebar
+            const space = document.createElement('div');
+            space.className = 'key-row';
+            space.innerHTML = `<div class="key" style="width:50%" data-key="SPACE" onclick="triggerKey(' ')">SPACE</div>`;
+            container.appendChild(space);
+        }
+
+        function triggerKey(char) {
+            const input = document.getElementById('cmd-input');
+            const k = document.querySelector(`.key[data-key="${char === ' ' ? 'SPACE' : char}"]`);
+            if(k) { k.classList.add('active'); playTone(600, 'square', 0.03); setTimeout(() => k.classList.remove('active'), 100); }
+            input.value += char;
+            input.focus();
         }
 
         function renderIcons() {
             const grid = document.getElementById('file-grid');
             if(!grid) return;
-            const files = ['Curriculo.pdf', 'Projetos.txt', 'Foto.png', 'Senha.key'];
-            files.forEach(f => {
+            grid.innerHTML = '';
+            Object.keys(virtualFS).forEach(f => {
+                let icon = 'file';
+                if(f.endsWith('.py')) icon = 'file-code';
+                if(f.endsWith('.java')) icon = 'coffee';
+                if(f.endsWith('.html')) icon = 'globe';
+                
                 const el = document.createElement('div');
-                el.className = 'text-center text-[10px] cursor-pointer hover:bg-white/10 p-1 rounded';
-                el.innerHTML = `<i data-lucide="file" class="mx-auto mb-1"></i>${f}`;
-                el.onclick = () => print(`Abrindo ${f}... (Acesso Negado)`, 'error');
+                el.className = 'text-center text-[10px] cursor-pointer hover:bg-white/10 p-1 rounded group';
+                el.innerHTML = `<i data-lucide="${icon}" class="mx-auto mb-1 group-hover:text-green-400"></i>${f}`;
+                el.onclick = () => {
+                    document.getElementById('cmd-input').value = f.endsWith('.html') ? `render ${f}` : (f.endsWith('.py') ? `python ${f}` : (f.endsWith('.java') ? `java ${f}` : `cat ${f}`));
+                    document.getElementById('cmd-input').focus();
+                };
                 grid.appendChild(el);
             });
             lucide.createIcons();
         }
-        
-        // Globo simples (apenas se visível)
-        function drawGlobe() {
-            const cvs = document.getElementById('globe-canvas');
-            if(!cvs || cvs.offsetParent === null) return; // Se escondido no mobile, não roda
-            const ctx = cvs.getContext('2d');
-            let t = 0;
-            
-            function loop() {
-                if(cvs.offsetParent === null) { requestAnimationFrame(loop); return; } // Pausa render se hidden
-                
-                cvs.width = cvs.clientWidth;
-                cvs.height = cvs.clientHeight;
-                const cx = cvs.width/2, cy = cvs.height/2;
-                
-                ctx.clearRect(0,0,cvs.width,cvs.height);
-                ctx.fillStyle = '#fff';
-                
-                t += 0.02;
-                for(let i=0; i<50; i++) {
-                    const ang = (i/50) * Math.PI * 2 + t;
-                    const x = Math.cos(ang) * 40;
-                    const y = Math.sin(ang) * 10; // Perspectiva achatada
-                    ctx.beginPath();
-                    ctx.arc(cx+x, cy+y, 2, 0, Math.PI*2);
-                    ctx.fill();
-                }
-                requestAnimationFrame(loop);
+
+        function updateClock() {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+            // CPU Sim
+            const cpu = Math.floor(Math.random() * 40 + 10);
+            if(document.getElementById('cpu-val')) {
+                document.getElementById('cpu-val').innerText = cpu + "%";
+                document.getElementById('cpu-bar').style.width = cpu + "%";
             }
-            loop();
         }
 
+        function drawGlobe() {
+            const canvas = document.getElementById('globe-canvas');
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            function resize() {
+                canvas.width = canvas.parentElement.offsetWidth;
+                canvas.height = canvas.parentElement.offsetHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            let time = 0;
+            function animate() {
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Globe Grid Effect
+                const cx = canvas.width / 2;
+                const cy = canvas.height / 2;
+                const r = Math.min(cx, cy) * 0.7;
+                
+                ctx.strokeStyle = '#004400';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                ctx.stroke();
+
+                time += 0.005;
+                
+                // Dots
+                ctx.fillStyle = '#00ff41';
+                for(let i=0; i<150; i++) {
+                    const lat = Math.acos(1 - 2 * (i / 150));
+                    const lon = Math.PI * 3 * i + time; // Rotate
+                    
+                    const x = r * Math.sin(lat) * Math.cos(lon);
+                    const z = r * Math.sin(lat) * Math.sin(lon);
+                    const y = r * Math.cos(lat);
+                    
+                    if (z > 0) { // Only draw front
+                        const scale = 200 / (200 + z);
+                        const alpha = z / r;
+                        ctx.globalAlpha = alpha;
+                        ctx.beginPath();
+                        ctx.arc(cx + x, cy + y, 1.5, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+                ctx.globalAlpha = 1;
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        function toggleFullScreen() {
+             try {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(() => {});
+                } else {
+                    if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+                }
+            } catch (e) {}
+        }
     </script>
 </body>
 </html>
