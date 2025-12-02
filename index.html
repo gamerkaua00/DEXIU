@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KAUÃ_OS // V13_ULTIMATE</title>
+    <title>KAUÃ_OS // V14_ULTIMATE</title>
     
     <!-- Bibliotecas Externas -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -53,19 +53,14 @@
         
         .power-on { 
             opacity: 1; filter: brightness(1) blur(0); pointer-events: all;
-            animation: powerOnFlicker 0.5s ease-out forwards;
+            animation: powerOnFlicker 0.6s ease-out forwards;
             box-shadow: 0 0 15px rgba(0,0,0,0.3);
         }
 
         @keyframes powerOnFlicker {
-            0% { opacity: 0; }
-            10% { opacity: 0.4; }
-            20% { opacity: 0.1; }
-            40% { opacity: 0.8; }
-            60% { opacity: 0.2; }
-            70% { opacity: 0.9; }
-            80% { opacity: 0.5; }
-            100% { opacity: 1; }
+            0% { opacity: 0; } 10% { opacity: 0.4; } 20% { opacity: 0.1; }
+            40% { opacity: 0.8; } 60% { opacity: 0.2; } 70% { opacity: 0.9; }
+            80% { opacity: 0.5; } 100% { opacity: 1; }
         }
 
         /* --- NOTIFICATION TOAST --- */
@@ -107,7 +102,7 @@
         }
         .ui-input:focus { border-color: var(--accent); }
 
-        /* --- IMMERSIVE CANVAS V2 --- */
+        /* --- IMMERSIVE CANVAS --- */
         #immersive-canvas {
             position: fixed; inset: 0; z-index: 100;
             background: var(--bg);
@@ -120,7 +115,7 @@
             display: flex; align-items: center; justify-content: space-between; padding: 0 15px;
         }
 
-        /* TABS SYSTEM */
+        /* TABS */
         .tabs-container { display: flex; gap: 2px; overflow-x: auto; max-width: 40vw; }
         .tab {
             padding: 4px 12px; background: #111; border: 1px solid #333; border-bottom: none;
@@ -141,17 +136,17 @@
             background: #ffffff; position: relative; transition: all 0.3s ease;
         }
         
-        /* FULLSCREEN PREVIEW MODE */
+        /* FULLSCREEN PREVIEW */
         .preview-pane.fullscreen {
             position: fixed; inset: 0; z-index: 200; width: 100% !important; height: 100% !important;
         }
         .fullscreen-exit-btn {
             display: none; position: absolute; top: 10px; right: 10px; z-index: 210;
-            background: red; color: white; border: none; padding: 5px 10px; cursor: pointer; font-weight: bold;
+            background: red; color: white; border: none; padding: 5px 10px; cursor: pointer; font-weight: bold; border-radius: 4px;
         }
         .preview-pane.fullscreen .fullscreen-exit-btn { display: block; }
 
-        /* Error Overlay in Preview */
+        /* Error Overlay */
         #error-overlay {
             position: absolute; bottom: 0; left: 0; width: 100%; max-height: 40%;
             background: rgba(20,0,0,0.95); border-top: 2px solid var(--danger);
@@ -203,7 +198,6 @@
         .btn-share { border-color: #3b82f6; color: #3b82f6; }
         .btn-share:hover { background: #3b82f6; color: white; }
 
-        /* Term & Keys */
         #term-out { flex: 1; padding: 10px; overflow-y: auto; color: #ccc; font-size: 13px; }
         .cmd-line { color: white; font-weight: bold; margin-top: 5px; }
         .key { background: #111; border: 1px solid #333; border-radius: 4px; display:flex; justify-content:center; align-items:center; cursor:pointer; font-size:12px; color:#666; transition: 0.05s; }
@@ -226,7 +220,7 @@
 
     <!-- START SCREEN -->
     <div id="start-overlay" onclick="OS.boot()">
-        <div class="text-4xl font-bold text-white mb-2 tracking-tighter">KAUÃ_OS <span class="text-xs bg-white text-black px-1 rounded">V13</span></div>
+        <div class="text-4xl font-bold text-white mb-2 tracking-tighter">KAUÃ_OS <span class="text-xs bg-white text-black px-1 rounded">V14</span></div>
         <div class="text-xs text-gray-500 blink-text">CLIQUE PARA INICIAR SISTEMA</div>
         <div class="loader-bar"><div class="loader-fill" id="boot-fill"></div></div>
     </div>
@@ -318,7 +312,7 @@
         <div class="panel power-off" id="p-header" style="grid-column: 1 / -1; grid-row: 1;">
             <div class="flex items-center justify-between h-full px-4">
                 <div class="font-bold text-lg flex gap-2 items-center">
-                    KAUÃ_OS <span class="text-[10px] border border-[var(--accent)] px-1 rounded text-[var(--accent)]">V13</span>
+                    KAUÃ_OS <span class="text-[10px] border border-[var(--accent)] px-1 rounded text-[var(--accent)]">V14</span>
                 </div>
                 <div class="flex gap-4 items-center">
                     <button onclick="UI.openModal('modal-settings')" class="text-[10px] hover:text-[var(--accent)] transition">OPÇÕES</button>
@@ -408,7 +402,7 @@
             }
         };
 
-        // --- AI ENGINE V2 (Logic Fixer) ---
+        // --- AI ENGINE V2 (Relaxed & Helpful) ---
         const AI = {
             fixCode() {
                 const editor = document.getElementById('editor-area');
@@ -418,46 +412,33 @@
 
                 // 1. HTML Stack Checker
                 if (Canvas.activeTab.endsWith('.html')) {
-                    // Check for unclosed tags logic
-                    const tags = [];
                     const matches = code.matchAll(/<\/?([a-z]+)[^>]*>/gi);
+                    const tags = [];
                     for (const m of matches) {
                         if(m[0].startsWith('</')) {
-                            // Closing tag
-                            if(tags.length > 0) tags.pop(); // Simplistic stack pop
-                        } else if(!m[0].endsWith('/>') && !['<br>', '<hr>', '<img>', '<input>', '<meta>', '<link>'].includes(m[0].toLowerCase())) {
+                            if(tags.length > 0) tags.pop();
+                        } else if(!m[0].endsWith('/>') && !['<br>', '<hr>', '<img>', '<input>', '<meta>', '<link>', '<!doctype>'].includes(m[0].toLowerCase())) {
                             tags.push(m[1]);
                         }
                     }
-                    
                     if (tags.length > 0) {
-                        // Close remaining tags
                         while(tags.length > 0) {
                             const t = tags.pop();
                             code += `\n</${t}>`;
                             fixes.push(`Fechada tag <${t}>`);
                         }
                     }
-
-                    // Script tag safety
                     if (code.includes('<script') && !code.includes('<' + '/script>')) {
                         code += '\n<' + '/script>';
                         fixes.push("Script fechado");
                     }
                 }
                 
-                // 2. JS Checker
+                // 2. JS Checker (Safe)
                 if (Canvas.activeTab.endsWith('.js')) {
                     if (code.includes('console.print')) {
                         code = code.replace(/console\.print/g, 'console.log');
                         fixes.push("console.print -> console.log");
-                    }
-                    // Check balanced braces count
-                    const open = (code.match(/{/g) || []).length;
-                    const close = (code.match(/}/g) || []).length;
-                    if(open > close) {
-                        code += '\n' + '}'.repeat(open - close);
-                        fixes.push("Fechadas chaves }");
                     }
                 }
 
@@ -474,7 +455,7 @@
                     Canvas.run();
                     UI.toast("AI: " + fixes.join(", "), "success");
                 } else {
-                    UI.toast("AI: Código parece íntegro.", "info");
+                    UI.toast("AI: Nenhum erro óbvio encontrado.", "info");
                 }
             }
         };
@@ -571,12 +552,12 @@
             loadContent() {
                 const file = FS.files[this.activeTab];
                 if(file) this.editor.value = file.content;
-                this.errorOverlay.style.display = 'none';
+                this.errorOverlay.style.display = 'none'; // Clear error on load
                 
                 if(file.type === 'web' || this.activeTab.endsWith('.html')) {
                     this.webFrame.style.display = 'block';
                     this.consoleFrame.style.display = 'none';
-                    this.runWeb(true); 
+                    this.runWeb(); 
                 } else {
                     this.webFrame.style.display = 'none';
                     this.consoleFrame.style.display = 'block';
@@ -596,21 +577,18 @@
                 const code = this.editor.value;
                 FS.files[this.activeTab].content = code;
                 FS.save();
+                
+                // IMPORTANT: Reset State
                 this.errorOverlay.style.display = 'none';
+                this.consoleFrame.innerHTML = '';
 
                 if(this.activeTab.endsWith('.html')) this.runWeb();
                 else if(this.activeTab.endsWith('.js')) this.runJS(code);
                 else this.runSimulated(code);
             },
 
-            runWeb(silent = false) {
+            runWeb() {
                 const code = this.editor.value;
-                // Pre-check for fatal HTML errors manually first
-                if(code.includes('<script') && !code.includes('<' + '/script>')) {
-                    if(!silent) this.showError("Syntax Error: Tag Script aberta mas não fechada.");
-                    return;
-                }
-
                 const frameDoc = this.webFrame.contentWindow.document;
                 frameDoc.open();
                 // Inject Error Catcher in Iframe safely
@@ -701,7 +679,7 @@
                 setTimeout(() => {
                     FS.init();
                     UI.init();
-                    Term.print("KAUÃ_OS V13 ONLINE.", "text-green-500");
+                    Term.print("KAUÃ_OS V14 ONLINE.", "text-green-500");
                 }, 2000);
             },
 
