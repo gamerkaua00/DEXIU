@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KAUÃ_SYSTEM // V5</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-color: #000000;
+            --panel-bg: #050505;
+            --border-color: #333;
+            --text-main: #e0e0e0;
+            --accent: #fff;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Share Tech Mono', monospace;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Scanlines (Efeito TV) */
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0.4;
+        }
+
+        /* --- LAYOUT GRID RESPONSIVO --- */
+        #main-grid {
+            display: grid;
+            width: 100%;
+            height: 100%;
+            padding: 5px;
+            gap: 8px;
+            /* Layout Padrão PC (3 Colunas) */
+            grid-template-columns: 250px 1fr 250px; 
+            grid-template-rows: 50px 1fr 280px;
+            opacity: 1; 
+            transition: opacity 0.5s;
+        }
+
+        /* LAYOUT MOBILE (Foca no Terminal + Teclado) */
+        @media (max-width: 1024px) {
+            #main-grid {
+                grid-template-columns: 1fr; /* 1 Coluna só */
+                grid-template-rows: 40px 1fr 220px; /* Header | Terminal | Teclado */
+            }
+            /* Esconde painéis laterais no mobile para dar espaço */
+            #p-left, #p-right, #p-files { display: none !important; }
+            
+            /* Ajusta Header */
+            #p-header { grid-column: 1 !important; grid-row: 1 !important; }
+            
+            /* Ajusta Terminal */
+            #p-center { grid-column: 1 !important; grid-row: 2 !important; }
+            
+            /* Ajusta Teclado */
+            #p-keyboard { 
+                grid-column: 1 !important; 
+                grid-row: 3 !important; 
+                width: 100% !important; 
+                margin-left: 0 !important;
+            }
+
+            .key { min-height: 45px; font-size: 16px; } /* Teclas maiores no touch */
+            #cmd-input { font-size: 18px; } /* Texto maior */
+        }
+
+        /* --- ESTILOS DOS PAINÉIS --- */
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            opacity: 0; /* Começa invisível para animação */
+            transform: scale(0.95);
+            transition: opacity 0.5s, transform 0.5s, box-shadow 0.3s;
+        }
+
+        .panel.power-on {
+            opacity: 1;
+            transform: scale(1);
+            box-shadow: 0 0 15px rgba(255,255,255,0.05);
+            border-color: #555;
+        }
+
+        .panel-header {
+            background: #111;
+            padding: 5px 10px;
+            font-size: 12px;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #888;
+            flex-shrink: 0;
+        }
+
+        /* TERMINAL */
+        #terminal-output {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+            color: #ddd;
+        }
+        .cmd-line { color: #fff; margin-bottom: 5px; }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .info { color: #60a5fa; }
+        
+        .input-area {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: #080808;
+            border-top: 1px solid #222;
+        }
+        #cmd-input {
+            background: transparent; border: none; outline: none;
+            color: #fff; flex: 1; margin-left: 10px;
+            font-family: inherit; font-size: 14px;
+        }
+
+        /* TECLADO */
+        #keyboard-container {
+            display: flex; flex-direction: column; 
+            justify-content: center; height: 100%; padding: 5px;
+        }
+        .key-row { display: flex; justify-content: center; gap: 4px; margin-bottom: 4px; flex: 1; }
+        .key {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 4px;
+            color: #666;
+            display: flex; align-items: center; justify-content: center;
+            flex: 1;
+            font-size: 12px;
+            transition: 0.05s;
+            cursor: pointer;
+            user-select: none;
+        }
+        .key:active, .key.active {
+            background: #fff; color: #000;
+            box-shadow: 0 0 20px rgba(255,255,255,0.8);
+            transform: translateY(2px);
+            border-color: #fff;
+        }
+
+        /* TELA DE START (Para destrava áudio) */
+        #start-overlay {
+            position: fixed; inset: 0; background: #000; z-index: 100;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer;
+        }
+        .start-btn {
+            border: 1px solid #fff; padding: 15px 40px;
+            color: #fff; font-size: 18px; letter-spacing: 2px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; box-shadow: 0 0 20px #fff; } 100% { opacity: 0.5; } }
+        
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #444; }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+
+    <!-- TELA DE INÍCIO (Clique para começar e liberar áudio) -->
+    <div id="start-overlay" onclick="bootSystem()">
+        <div class="text-xs text-gray-500 mb-4">SYSTEM READY // WAITING FOR USER INPUT</div>
+        <div class="start-btn">INICIAR SISTEMA</div>
+    </div>
+
+    <!-- TELA DE BOOT (Carregando) -->
+    <div id="boot-screen" class="fixed inset-0 bg-black z-90 hidden flex-col items-center justify-center font-mono text-green-500 text-xs md:text-sm">
+        <div id="boot-log" class="w-80 h-40 overflow-hidden mb-4 border-l-2 border-green-500 pl-4"></div>
+        <div class="w-64 h-1 bg-gray-900"><div id="progress-bar" class="h-full bg-green-500 w-0 transition-all duration-300"></div></div>
+    </div>
+
+    <!-- INTERFACE PRINCIPAL -->
+    <div id="main-grid" style="opacity: 0;">
+        
+        <!-- HEADER -->
+        <div class="panel" id="p-header" style="grid-column: 1 / -1; grid-row: 1;">
+            <div class="flex items-center justify-between h-full px-4">
+                <div class="font-bold text-xl tracking-tighter">KAUÃ_OS <span class="text-[10px] text-gray-500 border border-gray-500 px-1 rounded">V5.0</span></div>
+                <div class="hidden md:block text-xs text-gray-600 tracking-[0.3em]">ENCRYPTED CONNECTION</div>
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleFullScreen()" class="text-[10px] border border-gray-700 px-2 hover:bg-white hover:text-black transition">FULLSCREEN</button>
+                    <div id="clock">00:00</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LEFT (Stats - PC Only) -->
+        <div class="panel" id="p-left" style="grid-column: 1; grid-row: 2 / 4;">
+            <div class="panel-header">HARDWARE MONITOR</div>
+            <div class="p-4 flex flex-col gap-4 h-full">
+                <canvas id="cpu-chart" class="w-full h-24 border border-gray-800"></canvas>
+                <div class="text-xs space-y-2 mt-2">
+                    <div class="flex justify-between"><span>CPU</span><span id="cpu-val">12%</span></div>
+                    <div class="w-full bg-gray-900 h-1"><div id="cpu-bar" class="h-full bg-white w-[12%]"></div></div>
+                    
+                    <div class="flex justify-between mt-4"><span>RAM</span><span>8.4GB</span></div>
+                    <div class="w-full bg-gray-900 h-1"><div class="h-full bg-white w-[60%]"></div></div>
+                </div>
+                <div class="mt-auto border-t border-gray-800 pt-2 text-[10px] text-gray-500">
+                    UPTIME: <span id="uptime">00:00:00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CENTER (Terminal - Main) -->
+        <div class="panel" id="p-center" style="grid-column: 2; grid-row: 2;">
+            <div class="panel-header">
+                <span>/bin/bash</span>
+                <div class="flex gap-1">
+                    <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                    <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+                    <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                </div>
+            </div>
+            <div id="terminal-output">
+                <!-- Logs aqui -->
+            </div>
+            <div class="input-area">
+                <span class="text-green-500 font-bold">root@kaua:~$</span>
+                <input type="text" id="cmd-input" autocomplete="off" autofocus>
+            </div>
+        </div>
+
+        <!-- RIGHT (Globe - PC Only) -->
+        <div class="panel" id="p-right" style="grid-column: 3; grid-row: 2;">
+            <div class="panel-header">NET_MAP</div>
+            <div class="flex-1 bg-black flex items-center justify-center">
+                <canvas id="globe-canvas"></canvas>
+            </div>
+        </div>
+
+        <!-- FILES (Bottom Left - PC Only) -->
+        <div class="panel" id="p-files" style="grid-column: 2; grid-row: 3; width: 40%; float: left; margin-right: 10px;">
+            <div class="panel-header">
+                <span>FILES</span>
+                <button onclick="mountDrive()" class="hover:text-white transition cursor-pointer text-[10px]">[MOUNT]</button>
+            </div>
+            <div id="file-grid" class="p-2 grid grid-cols-4 gap-2 overflow-y-auto content-start h-full">
+                <!-- Icons -->
+            </div>
+        </div>
+
+        <!-- KEYBOARD (Bottom Right/Full Bottom Mobile) -->
+        <div class="panel" id="p-keyboard" style="grid-column: 2 / 4; grid-row: 3; width: auto; margin-left: 41%;">
+            <div class="panel-header">INPUT</div>
+            <div id="keyboard-container">
+                <!-- Keys via JS -->
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- CONFIGURAÇÃO DE ÁUDIO SEGURA ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playTone(freq = 600, type = 'square', duration = 0.05) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.value = freq;
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        // --- SISTEMA DE BOOT ---
+        async function bootSystem() {
+            document.getElementById('start-overlay').style.display = 'none';
+            document.getElementById('boot-screen').style.display = 'flex';
+            
+            // Tenta iniciar áudio no clique do usuário
+            playTone(400, 'sine', 0.1);
+
+            const logs = [
+                "Initializing Kernel...", "Loading Drivers...", "Mounting Virtual FS...", 
+                "Starting Network Daemon...", "Decrypting User Data...", "System Ready."
+            ];
+            const logDiv = document.getElementById('boot-log');
+            const bar = document.getElementById('progress-bar');
+
+            for (let i = 0; i < logs.length; i++) {
+                logDiv.innerHTML += `<div>> ${logs[i]}</div>`;
+                logDiv.scrollTop = logDiv.scrollHeight;
+                bar.style.width = `${(i + 1) / logs.length * 100}%`;
+                playTone(800 + (i*100), 'sawtooth', 0.03); // Som tech subindo
+                await new Promise(r => setTimeout(r, 300)); // Delay rápido
+            }
+
+            setTimeout(() => {
+                document.getElementById('boot-screen').style.display = 'none';
+                startMainInterface();
+            }, 500);
+        }
+
+        function startMainInterface() {
+            const grid = document.getElementById('main-grid');
+            grid.style.opacity = '1';
+
+            // Efeito "Luzes da Casa"
+            const panels = ['p-header', 'p-left', 'p-center', 'p-right', 'p-files', 'p-keyboard'];
+            panels.forEach((id, idx) => {
+                setTimeout(() => {
+                    const el = document.getElementById(id);
+                    if(el) {
+                        el.classList.add('power-on');
+                        playTone(200, 'square', 0.05); // Click som
+                    }
+                }, idx * 150);
+            });
+
+            setTimeout(() => {
+                print("Bem-vindo, Kauã.", "success");
+                print("Sistema Operacional carregado.", "info");
+                document.getElementById('cmd-input').focus();
+            }, 1200);
+
+            startLoops();
+        }
+
+        // --- TECLADO VIRTUAL ---
+        function renderKeyboard() {
+            const layout = [
+                "1234567890",
+                "QWERTYUIOP",
+                "ASDFGHJKL",
+                "ZXCVBNM"
+            ];
+            const container = document.getElementById('keyboard-container');
+            
+            layout.forEach(row => {
+                const div = document.createElement('div');
+                div.className = 'key-row';
+                row.split('').forEach(char => {
+                    const k = document.createElement('div');
+                    k.className = 'key';
+                    k.innerText = char;
+                    k.dataset.key = char;
+                    
+                    // Touch Event para Mobile
+                    k.addEventListener('touchstart', (e) => {
+                        e.preventDefault(); // Evita zoom
+                        triggerKey(char);
+                    });
+                    
+                    // Click Event para Mouse
+                    k.addEventListener('mousedown', () => triggerKey(char));
+                    
+                    div.appendChild(k);
+                });
+                container.appendChild(div);
+            });
+            
+            // Spacebar
+            const spaceRow = document.createElement('div');
+            spaceRow.className = 'key-row';
+            const space = document.createElement('div');
+            space.className = 'key';
+            space.style.flex = '0 0 50%';
+            space.innerText = "SPACE";
+            space.dataset.key = "SPACE";
+            space.addEventListener('touchstart', (e) => { e.preventDefault(); triggerKey(" "); });
+            space.addEventListener('mousedown', () => triggerKey(" "));
+            spaceRow.appendChild(space);
+            container.appendChild(spaceRow);
+        }
+
+        function triggerKey(char) {
+            const input = document.getElementById('cmd-input');
+            const k = document.querySelector(`.key[data-key="${char === ' ' ? 'SPACE' : char}"]`);
+            
+            if(k) {
+                k.classList.add('active');
+                playTone(600, 'square', 0.03); // Som de tecla
+                setTimeout(() => k.classList.remove('active'), 100);
+            }
+
+            if (char === 'SPACE') input.value += ' ';
+            else input.value += char;
+            input.focus();
+        }
+
+        // --- TERMINAL LOGIC ---
+        const output = document.getElementById('terminal-output');
+        const input = document.getElementById('cmd-input');
+
+        input.addEventListener('keydown', (e) => {
+            // Mapeamento visual físico -> virtual
+            const k = document.querySelector(`.key[data-key="${e.key.toUpperCase()}"]`);
+            if(k) {
+                k.classList.add('active');
+                setTimeout(() => k.classList.remove('active'), 100);
+            }
+            if(e.key !== 'Enter') playTone(800, 'triangle', 0.02);
+
+            if(e.key === 'Enter') {
+                const cmd = input.value.trim();
+                print(`root@kaua:~$ ${cmd}`, 'cmd-line');
+                processCommand(cmd);
+                input.value = '';
+                playTone(300, 'sawtooth', 0.1); // Som de Enter
+            }
+        });
+
+        function print(text, type = '') {
+            const div = document.createElement('div');
+            div.className = type;
+            div.innerText = text;
+            output.appendChild(div);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function processCommand(cmd) {
+            const args = cmd.split(' ');
+            const c = args[0].toLowerCase();
+
+            if (c === 'help') {
+                print("COMANDOS: help, clear, date, reboot, echo [msg]");
+            } else if (c === 'clear') {
+                output.innerHTML = '';
+            } else if (c === 'date') {
+                print(new Date().toString(), 'info');
+            } else if (c === 'reboot') {
+                location.reload();
+            } else if (c === 'echo') {
+                print(args.slice(1).join(' '), 'success');
+            } else if (c === '') {
+                // do nothing
+            } else {
+                print(`Comando não encontrado: ${c}`, 'error');
+            }
+        }
+
+        // --- FULLSCREEN ---
+        function toggleFullScreen() {
+            // Tenta acionar o fullscreen, mas pega erros de permissão se falhar
+            try {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        print("Erro: Modo Tela Cheia bloqueado por permissão do navegador.", "error");
+                        console.warn("Fullscreen error handled:", err);
+                    });
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen().catch(err => console.warn(err));
+                    }
+                }
+            } catch (e) {
+                print("Erro: API de Fullscreen não disponível.", "error");
+            }
+        }
+
+        // --- UTILIDADES GRÁFICAS (Simplificadas para Performance) ---
+        function startLoops() {
+            renderKeyboard();
+            renderIcons();
+            setInterval(updateStats, 1000);
+            drawGlobe(); // Só desenha se existir (PC)
+        }
+
+        function updateStats() {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString();
+            
+            // Simula CPU
+            const cpu = Math.floor(Math.random() * 30 + 10);
+            const cpuEl = document.getElementById('cpu-val');
+            const cpuBar = document.getElementById('cpu-bar');
+            if(cpuEl) {
+                cpuEl.innerText = cpu + "%";
+                cpuBar.style.width = cpu + "%";
+            }
+        }
+
+        function renderIcons() {
+            const grid = document.getElementById('file-grid');
+            if(!grid) return;
+            const files = ['Curriculo.pdf', 'Projetos.txt', 'Foto.png', 'Senha.key'];
+            files.forEach(f => {
+                const el = document.createElement('div');
+                el.className = 'text-center text-[10px] cursor-pointer hover:bg-white/10 p-1 rounded';
+                el.innerHTML = `<i data-lucide="file" class="mx-auto mb-1"></i>${f}`;
+                el.onclick = () => print(`Abrindo ${f}... (Acesso Negado)`, 'error');
+                grid.appendChild(el);
+            });
+            lucide.createIcons();
+        }
+        
+        // Globo simples (apenas se visível)
+        function drawGlobe() {
+            const cvs = document.getElementById('globe-canvas');
+            if(!cvs || cvs.offsetParent === null) return; // Se escondido no mobile, não roda
+            const ctx = cvs.getContext('2d');
+            let t = 0;
+            
+            function loop() {
+                if(cvs.offsetParent === null) { requestAnimationFrame(loop); return; } // Pausa render se hidden
+                
+                cvs.width = cvs.clientWidth;
+                cvs.height = cvs.clientHeight;
+                const cx = cvs.width/2, cy = cvs.height/2;
+                
+                ctx.clearRect(0,0,cvs.width,cvs.height);
+                ctx.fillStyle = '#fff';
+                
+                t += 0.02;
+                for(let i=0; i<50; i++) {
+                    const ang = (i/50) * Math.PI * 2 + t;
+                    const x = Math.cos(ang) * 40;
+                    const y = Math.sin(ang) * 10; // Perspectiva achatada
+                    ctx.beginPath();
+                    ctx.arc(cx+x, cy+y, 2, 0, Math.PI*2);
+                    ctx.fill();
+                }
+                requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+    </script>
+</body>
+</html>
