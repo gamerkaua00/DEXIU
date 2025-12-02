@@ -3,655 +3,579 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KAUÃ_SYSTEM // V6</title>
+    <title>KAUÃ_OS // GEMINI_CANVAS_V10</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         :root {
-            --bg-color: #000000;
-            --panel-bg: #050505;
-            --border-color: #333;
-            --text-main: #e0e0e0;
-            --accent: #fff;
-            --highlight: #00ff41;
+            --bg: #050505;
+            --panel: #0a0a0a;
+            --border: #333;
+            --accent: #00ff41;
+            --text: #e0e0e0;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
+        * { box-sizing: border-box; user-select: none; }
+        
         body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
+            background-color: var(--bg); color: var(--text);
             font-family: 'Share Tech Mono', monospace;
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            height: 100vh; width: 100vw; overflow: hidden;
+            margin: 0; display: flex; justify-content: center; align-items: center;
         }
 
-        /* Scanlines (Efeito TV) */
+        /* --- FX --- */
         .scanlines {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            background-size: 100% 2px, 3px 100%;
-            pointer-events: none;
-            z-index: 50;
-            opacity: 0.3;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%; pointer-events: none; z-index: 10; opacity: 0.2;
         }
 
-        /* --- LAYOUT GRID RESPONSIVO --- */
-        #main-grid {
-            display: grid;
-            width: 100%;
-            height: 100%;
-            padding: 5px;
-            gap: 8px;
-            /* Layout Padrão PC (3 Colunas) */
+        /* --- MODALS (New File) --- */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 150;
+            display: none; align-items: center; justify-content: center; backdrop-filter: blur(2px);
+        }
+        .modal-box {
+            background: #0f0f0f; border: 1px solid var(--accent); padding: 2px;
+            width: 300px; box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+            display: flex; flex-direction: column;
+        }
+        .modal-header {
+            background: var(--accent); color: black; font-weight: bold; padding: 5px 10px;
+            text-transform: uppercase; font-size: 12px;
+        }
+        .modal-body { padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .lang-btn {
+            background: #222; border: 1px solid #444; color: #ccc; padding: 8px;
+            cursor: pointer; text-align: left; transition: 0.2s; font-size: 12px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .lang-btn:hover { background: #333; border-color: var(--accent); color: white; }
+        .modal-input {
+            background: black; border: 1px solid #444; color: white; padding: 8px;
+            font-family: 'Share Tech Mono'; outline: none;
+        }
+
+        /* --- IMMERSIVE CANVAS --- */
+        #immersive-canvas {
+            position: fixed; inset: 0; z-index: 100;
+            background: #080808;
+            display: none; flex-direction: column;
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .canvas-header {
+            height: 50px; border-bottom: 1px solid #333;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; background: #0f0f0f;
+        }
+
+        .canvas-body { flex: 1; display: flex; overflow: hidden; }
+
+        .code-pane {
+            flex: 1; display: flex; flex-direction: column; border-right: 1px solid #333;
+            background: #0b0b0b; min-width: 300px;
+        }
+        .preview-pane {
+            flex: 1; display: flex; flex-direction: column;
+            background: #1a1a1a; position: relative;
+        }
+
+        #editor-area {
+            flex: 1; background: transparent; color: #d4d4d4; border: none; outline: none;
+            padding: 20px; font-family: 'Fira Code', monospace; font-size: 14px; resize: none;
+            line-height: 1.6; white-space: pre;
+        }
+
+        #web-preview { width: 100%; height: 100%; border: none; background: white; display: none; }
+        #console-preview { 
+            width: 100%; height: 100%; padding: 20px; 
+            font-family: 'Fira Code', monospace; font-size: 14px; 
+            color: var(--accent); overflow-y: auto; display: none;
+        }
+
+        /* --- DESKTOP GRID --- */
+        #desktop-grid {
+            display: grid; width: 100%; height: 100%; padding: 5px; gap: 5px;
             grid-template-columns: 250px 1fr 250px; 
-            grid-template-rows: 50px 1fr 280px;
-            opacity: 1; 
-            transition: opacity 0.5s;
+            grid-template-rows: 40px 1fr 240px;
+            transition: opacity 0.3s, filter 0.3s;
+            opacity: 0; 
         }
 
-        /* LAYOUT MOBILE */
+        /* Mobile Layout */
         @media (max-width: 1024px) {
-            #main-grid {
+            #desktop-grid {
                 grid-template-columns: 1fr;
-                grid-template-rows: 40px 1fr 220px;
+                grid-template-rows: 40px 1fr 200px;
             }
             #p-left, #p-right, #p-files { display: none !important; }
             #p-header { grid-column: 1 !important; grid-row: 1 !important; }
             #p-center { grid-column: 1 !important; grid-row: 2 !important; }
-            #p-keyboard { 
-                grid-column: 1 !important; 
-                grid-row: 3 !important; 
-                width: 100% !important; 
-                margin-left: 0 !important;
-            }
-            .key { min-height: 45px; font-size: 16px; }
-            #cmd-input { font-size: 16px; }
+            #p-keyboard { grid-column: 1 !important; grid-row: 3 !important; width: 100% !important; margin-left: 0 !important; }
+            
+            .canvas-body { flex-direction: column; }
+            .code-pane { border-right: none; border-bottom: 1px solid #333; height: 50%; }
+            .preview-pane { height: 50%; }
         }
 
-        /* --- PAINÉIS --- */
+        /* --- PANELS --- */
         .panel {
-            background: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            opacity: 0; 
-            transform: scale(0.95);
-            transition: opacity 0.5s, transform 0.5s, box-shadow 0.3s;
+            background: var(--panel); border: 1px solid var(--border);
+            display: flex; flex-direction: column; overflow: hidden; position: relative;
         }
-
-        .panel.power-on {
-            opacity: 1;
-            transform: scale(1);
-            box-shadow: 0 0 15px rgba(255,255,255,0.05);
-            border-color: #555;
-        }
-
         .panel-header {
-            background: #111;
-            padding: 5px 10px;
-            font-size: 12px;
-            text-transform: uppercase;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: #888;
-            flex-shrink: 0;
+            background: #111; padding: 4px 10px; font-size: 11px;
+            text-transform: uppercase; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center; color: #666;
         }
 
-        /* TERMINAL */
-        #terminal-output {
-            flex: 1;
-            padding: 10px;
-            overflow-y: auto;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 14px;
-            line-height: 1.4;
-            color: #ddd;
+        /* --- UI ELEMENTS --- */
+        .btn {
+            background: #222; border: 1px solid #444; color: #ccc;
+            padding: 6px 14px; font-size: 12px; cursor: pointer; transition: 0.2s;
+            display: flex; items-center; gap: 5px; border-radius: 4px;
         }
-        .cmd-line { color: #fff; margin-bottom: 5px; border-left: 2px solid #555; padding-left: 8px; }
-        .success { color: #4ade80; }
-        .error { color: #f87171; }
-        .info { color: #60a5fa; }
-        .warning { color: #fbbf24; }
-        
-        .input-area {
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            background: #080808;
-            border-top: 1px solid #222;
-        }
-        #cmd-input {
-            background: transparent; border: none; outline: none;
-            color: #fff; flex: 1; margin-left: 10px;
-            font-family: inherit; font-size: 14px;
-        }
+        .btn:hover { background: #333; color: white; border-color: #666; }
+        .btn-run { background: #14532d; border-color: #166534; color: #4ade80; }
+        .btn-run:hover { background: #15803d; }
 
-        /* KEYBOARD */
-        #keyboard-container {
-            display: flex; flex-direction: column; 
-            justify-content: center; height: 100%; padding: 5px;
+        .key { 
+            background: #111; border: 1px solid #333; border-radius: 4px; 
+            display:flex; justify-content:center; align-items:center; cursor:pointer; 
+            font-size:12px; transition:0.05s; color:#666; 
         }
-        .key-row { display: flex; justify-content: center; gap: 4px; margin-bottom: 4px; flex: 1; }
-        .key {
-            background: #111;
-            border: 1px solid #333;
-            border-radius: 4px;
-            color: #666;
-            display: flex; align-items: center; justify-content: center;
-            flex: 1;
-            font-size: 12px;
-            transition: 0.05s;
-            cursor: pointer;
-            user-select: none;
-        }
-        .key.active {
-            background: #fff; color: #000;
-            box-shadow: 0 0 15px rgba(255,255,255,0.8);
-            transform: translateY(2px);
-            border-color: #fff;
-        }
+        /* Efeito visual da tecla corrigido */
+        .key.active { background: #fff; color: black; box-shadow: 0 0 15px rgba(255,255,255,0.8); transform: translateY(1px); }
 
-        /* MODALS (Wiki & Render) */
-        .modal-overlay {
-            display: none; position: fixed; inset: 0; z-index: 60;
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(2px);
-            align-items: center; justify-content: center;
-        }
-        .modal-box {
-            width: 90%; max-width: 600px; height: 70%;
-            background: #050505; border: 1px solid #fff;
-            display: flex; flex-col; flex-direction: column;
-            box-shadow: 0 0 30px rgba(0,255,65, 0.1);
-        }
-        .modal-header {
-            background: #fff; color: #000; padding: 5px 10px;
-            font-weight: bold; display: flex; justify-content: space-between;
-        }
-        .modal-content {
-            padding: 20px; overflow-y: auto; flex: 1; color: #ccc; font-size: 14px;
-        }
+        #term-out { flex: 1; padding: 10px; overflow-y: auto; color: #ccc; font-size: 13px; }
+        .cmd-line { color: white; font-weight: bold; margin-top: 5px; }
 
-        /* START SCREEN */
+        /* START OVERLAY */
         #start-overlay {
-            position: fixed; inset: 0; background: #000; z-index: 100;
+            position: fixed; inset: 0; background: #000; z-index: 200;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             cursor: pointer;
         }
-        .start-btn {
-            border: 1px solid #fff; padding: 15px 40px;
-            color: #fff; font-size: 18px; letter-spacing: 2px;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; box-shadow: 0 0 20px #fff; } 100% { opacity: 0.5; } }
+        .blink-text { animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.5; } }
 
-        /* SCROLLBAR */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #000; }
-        ::-webkit-scrollbar-thumb { background: #444; }
     </style>
 </head>
 <body>
 
     <div class="scanlines"></div>
 
-    <!-- WIKI MODAL -->
-    <div id="wiki-modal" class="modal-overlay">
+    <!-- START OVERLAY -->
+    <div id="start-overlay" onclick="OS.boot()">
+        <div class="text-3xl font-bold text-white mb-2 tracking-tighter">KAUÃ_OS <span class="text-xs text-green-500 bg-green-900/30 px-1 rounded">V10</span></div>
+        <div class="text-xs text-gray-500 blink-text">CLICK TO INITIALIZE SYSTEM</div>
+    </div>
+
+    <!-- NEW FILE MODAL -->
+    <div id="new-file-modal" class="modal-overlay">
         <div class="modal-box">
-            <div class="modal-header">
-                <span>SYSTEM_WIKI_DATABASE</span>
-                <span class="cursor-pointer" onclick="closeModal('wiki-modal')">[X]</span>
+            <div class="modal-header">NOVO ARQUIVO</div>
+            <div class="modal-body">
+                <input type="text" id="new-filename" class="modal-input" placeholder="Nome do arquivo (sem extensão)">
+                <div class="text-xs text-gray-500 mt-2">SELECIONE A LINGUAGEM:</div>
+                <button class="lang-btn" onclick="OS.createFile('html')"><i data-lucide="globe" class="w-4 h-4 text-orange-400"></i> HTML5 (Web)</button>
+                <button class="lang-btn" onclick="OS.createFile('python')"><i data-lucide="terminal" class="w-4 h-4 text-blue-400"></i> PYTHON 3</button>
+                <button class="lang-btn" onclick="OS.createFile('java')"><i data-lucide="coffee" class="w-4 h-4 text-red-400"></i> JAVA</button>
+                <button class="lang-btn" onclick="OS.createFile('cpp')"><i data-lucide="code-2" class="w-4 h-4 text-blue-600"></i> C++</button>
+                <button class="lang-btn" onclick="OS.createFile('csharp')"><i data-lucide="hash" class="w-4 h-4 text-purple-400"></i> C#</button>
+                <button class="lang-btn" style="border-color: #991b1b; color: #f87171;" onclick="document.getElementById('new-file-modal').style.display='none'">CANCELAR</button>
             </div>
-            <div class="modal-content">
-                <h3 class="text-white text-lg border-b border-gray-700 mb-2">Comandos do Terminal</h3>
-                <ul class="space-y-3">
-                    <li><span class="text-green-400">help</span> - Lista comandos rápidos.</li>
-                    <li><span class="text-green-400">ls</span> - Lista arquivos no diretório.</li>
-                    <li><span class="text-green-400">cat [arquivo]</span> - Lê o conteúdo de um arquivo de texto.</li>
-                    <li><span class="text-green-400">clear</span> - Limpa a tela do terminal.</li>
-                    <li><span class="text-green-400">python [arquivo.py]</span> - Executa scripts Python (Simulado).</li>
-                    <li><span class="text-green-400">java [arquivo.java]</span> - Compila e executa Java (Simulado).</li>
-                    <li><span class="text-green-400">render [arquivo.html]</span> - Renderiza HTML visualmente.</li>
-                    <li><span class="text-green-400">mount</span> - Acessa arquivos do PC real (Chrome/Edge).</li>
-                    <li><span class="text-green-400">date</span> - Mostra data e hora do sistema.</li>
-                </ul>
-                <div class="mt-4 text-xs text-gray-500">
-                    DICA: Use 'wiki' para voltar aqui a qualquer momento.
+        </div>
+    </div>
+
+    <!-- IMMERSIVE CANVAS (GEMINI STYLE) -->
+    <div id="immersive-canvas">
+        <div class="canvas-header">
+            <div class="flex items-center gap-3">
+                <div class="p-1 bg-green-900 rounded border border-green-700">
+                    <i data-lucide="terminal" class="w-4 h-4 text-green-400"></i>
+                </div>
+                <div>
+                    <div class="text-sm font-bold text-white tracking-wide" id="canvas-filename">UNTITLED</div>
+                    <div class="text-[10px] text-gray-500">DEV ENVIRONMENT</div>
                 </div>
             </div>
+            
+            <div class="flex items-center gap-3">
+                <button class="btn btn-run" onclick="Canvas.run()">
+                    <i data-lucide="play" class="w-3 h-3"></i> <span class="hidden md:inline">RODAR CÓDIGO</span>
+                </button>
+                <button class="btn" onclick="Canvas.close()">
+                    <i data-lucide="x" class="w-3 h-3"></i> FECHAR
+                </button>
+            </div>
+        </div>
+
+        <div class="canvas-body">
+            <div class="code-pane">
+                <textarea id="editor-area" spellcheck="false" placeholder="// Escreva seu código aqui..."></textarea>
+            </div>
+            <div class="preview-pane">
+                <iframe id="web-preview"></iframe>
+                <div id="console-preview">
+                    <div class="opacity-50 mb-2">// CONSOLE OUTPUT</div>
+                    <div id="console-logs"></div>
+                </div>
+                <div class="absolute top-2 right-2 px-2 py-1 bg-black/50 text-[10px] text-gray-400 border border-white/10 rounded">PREVIEW</div>
+            </div>
         </div>
     </div>
 
-    <!-- RENDER MODAL -->
-    <div id="render-modal" class="modal-overlay">
-        <div class="modal-box" style="background: white;">
-            <div class="modal-header" style="background: #333; color: white;">
-                <span>HTML_PREVIEW_WINDOW</span>
-                <span class="cursor-pointer" onclick="closeModal('render-modal')">[CLOSE]</span>
-            </div>
-            <div id="render-content" class="w-full h-full text-black p-4 overflow-auto">
-                <!-- Conteúdo HTML injetado aqui -->
-            </div>
-        </div>
-    </div>
-
-    <!-- START SCREEN -->
-    <div id="start-overlay" onclick="bootSystem()">
-        <div class="text-xs text-gray-500 mb-4">SYSTEM READY // WAITING FOR USER INPUT</div>
-        <div class="start-btn">INICIAR SISTEMA</div>
-    </div>
-
-    <!-- BOOT SCREEN -->
-    <div id="boot-screen" class="fixed inset-0 bg-black z-90 hidden flex-col items-center justify-center font-mono text-green-500 text-xs md:text-sm">
-        <div id="boot-log" class="w-80 h-40 overflow-hidden mb-4 border-l-2 border-green-500 pl-4"></div>
-        <div class="w-64 h-1 bg-gray-900"><div id="progress-bar" class="h-full bg-green-500 w-0 transition-all duration-300"></div></div>
-    </div>
-
-    <!-- INTERFACE PRINCIPAL -->
-    <div id="main-grid" style="opacity: 0;">
-        
+    <!-- DESKTOP GRID -->
+    <div id="desktop-grid">
         <!-- HEADER -->
         <div class="panel" id="p-header" style="grid-column: 1 / -1; grid-row: 1;">
             <div class="flex items-center justify-between h-full px-4">
-                <div class="font-bold text-xl tracking-tighter">KAUÃ_OS <span class="text-[10px] text-gray-500 border border-gray-500 px-1 rounded">V6.0</span></div>
-                <div class="flex gap-4">
-                    <button onclick="openWiki()" class="text-[10px] border border-gray-700 px-3 hover:bg-white hover:text-black transition uppercase">Wiki / Ajuda</button>
-                    <button onclick="toggleFullScreen()" class="text-[10px] border border-gray-700 px-2 hover:bg-white hover:text-black transition hidden md:block">FULLSCREEN</button>
-                    <div id="clock">00:00</div>
+                <div class="font-bold text-lg text-white flex gap-2 items-center">
+                    KAUÃ_OS <span class="text-[10px] bg-green-900 px-1 rounded text-green-300">V10</span>
+                </div>
+                <div class="flex gap-4 items-center">
+                    <div id="clock" class="text-sm font-mono text-gray-400">00:00</div>
                 </div>
             </div>
         </div>
 
-        <!-- LEFT (Stats) -->
+        <!-- LEFT -->
         <div class="panel" id="p-left" style="grid-column: 1; grid-row: 2 / 4;">
-            <div class="panel-header">HARDWARE MONITOR</div>
-            <div class="p-4 flex flex-col gap-4 h-full">
-                <canvas id="cpu-chart" class="w-full h-24 border border-gray-800"></canvas>
-                <div class="text-xs space-y-2 mt-2">
-                    <div class="flex justify-between"><span>CPU</span><span id="cpu-val">12%</span></div>
-                    <div class="w-full bg-gray-900 h-1"><div id="cpu-bar" class="h-full bg-white w-[12%]"></div></div>
-                    
-                    <div class="flex justify-between mt-4"><span>RAM</span><span>8.4GB</span></div>
-                    <div class="w-full bg-gray-900 h-1"><div class="h-full bg-white w-[60%]"></div></div>
-                </div>
-                <div class="mt-auto border-t border-gray-800 pt-2 text-[10px] text-gray-500">
-                    UPTIME: <span id="uptime">00:00:00</span>
-                </div>
+            <div class="panel-header">STATUS</div>
+            <div class="p-4 flex flex-col gap-4">
+                <canvas id="cpu-chart" class="w-full h-24 border border-gray-800 bg-black"></canvas>
+                <div class="text-xs text-gray-400">CPU LOAD: <span id="cpu-val" class="text-green-400">12%</span></div>
             </div>
         </div>
 
-        <!-- CENTER (Terminal) -->
+        <!-- CENTER (TERMINAL) -->
         <div class="panel" id="p-center" style="grid-column: 2; grid-row: 2;">
-            <div class="panel-header">
-                <span>/bin/bash</span>
-                <div class="flex gap-1">
-                    <div class="w-2 h-2 rounded-full bg-red-500"></div>
-                    <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
-                    <div class="w-2 h-2 rounded-full bg-green-500"></div>
-                </div>
-            </div>
-            <div id="terminal-output">
-                <div class="info mb-2">Kauã OS v6.0 Initialized.</div>
-                <div class="text-gray-500 mb-2">Digite 'help' ou 'wiki' para ver os comandos.</div>
-            </div>
-            <div class="input-area">
-                <span class="text-green-500 font-bold">root@kaua:~$</span>
-                <input type="text" id="cmd-input" autocomplete="off" autofocus>
+            <div class="panel-header">TERMINAL</div>
+            <div id="term-out"></div>
+            <div class="bg-black p-2 flex items-center border-t border-[#333]">
+                <span class="text-green-500 mr-2 font-bold">root@kaua:~$</span>
+                <input id="cmd-input" type="text" class="bg-transparent border-none outline-none text-white flex-1 font-mono" autocomplete="off">
             </div>
         </div>
 
-        <!-- RIGHT (Globe) -->
+        <!-- RIGHT (GLOBE) -->
         <div class="panel" id="p-right" style="grid-column: 3; grid-row: 2;">
-            <div class="panel-header">GLOBAL_TRACKER</div>
+            <div class="panel-header">REDE</div>
             <div class="flex-1 bg-black flex items-center justify-center relative">
                 <canvas id="globe-canvas"></canvas>
-                <div class="absolute bottom-2 right-2 text-[10px] text-green-500">CONN: SECURE</div>
+                <div class="absolute bottom-2 right-2 text-[9px] text-gray-500">CONN: ENCRYPTED</div>
             </div>
         </div>
 
         <!-- FILES -->
-        <div class="panel" id="p-files" style="grid-column: 2; grid-row: 3; width: 40%; float: left; margin-right: 10px;">
+        <div class="panel" id="p-files" style="grid-column: 2; grid-row: 3; width: 40%; float: left; margin-right: 5px;">
             <div class="panel-header">
-                <span>FILES</span>
-                <button onclick="mountDrive()" class="hover:text-white transition cursor-pointer text-[10px]">[MOUNT]</button>
+                <span>ARQUIVOS</span>
+                <button onclick="document.getElementById('new-file-modal').style.display='flex'" class="text-[9px] hover:text-green-400 cursor-pointer">[NEW FILE]</button>
             </div>
-            <div id="file-grid" class="p-2 grid grid-cols-4 gap-2 overflow-y-auto content-start h-full">
-                <!-- Icons -->
-            </div>
+            <div id="file-grid" class="p-2 grid grid-cols-4 gap-2 content-start overflow-y-auto h-full"></div>
         </div>
 
         <!-- KEYBOARD -->
         <div class="panel" id="p-keyboard" style="grid-column: 2 / 4; grid-row: 3; width: auto; margin-left: 41%;">
             <div class="panel-header">INPUT</div>
-            <div id="keyboard-container">
-                <!-- Keys via JS -->
-            </div>
+            <div id="kb-container" class="p-2 h-full flex flex-col justify-center gap-1"></div>
         </div>
-
     </div>
 
     <script>
-        // --- AUDIO CONFIG ---
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playTone(freq = 600, type = 'square', duration = 0.05) {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            try {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = type;
-                osc.frequency.value = freq;
+        // --- AUDIO SYSTEM ---
+        const AudioSys = {
+            ctx: null,
+            init() {
+                window.AudioContext = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AudioContext();
+            },
+            play(type) {
+                if (!this.ctx) this.init();
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
                 osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
-                osc.stop(audioCtx.currentTime + duration);
-            } catch(e) {}
-        }
-
-        // --- DADOS DO SISTEMA ---
-        const virtualFS = {
-            'main.py': `print("Iniciando Protocolo Python...")\nx = 10\ny = 20\nprint("Soma de X + Y é: " + str(x+y))\nprint("Execução finalizada.")`,
-            'App.java': `public class App {\n  public static void main(String[] args) {\n    System.out.println("Java Environment Loaded.");\n    System.out.println("Hello from JVM (Simulated)");\n  }\n}`,
-            'site.html': `<h1>Olá Mundo</h1><p>Este é um renderizador HTML básico dentro do terminal.</p><button style='padding:5px; border:1px solid black;'>Botão Teste</button>`,
-            'readme.txt': 'Bem-vindo ao Sistema V6.\nAgora com suporte a múltiplas linguagens.'
+                gain.connect(this.ctx.destination);
+                const now = this.ctx.currentTime;
+                
+                if (type === 'click') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(800, now);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                    osc.start(now); osc.stop(now + 0.05);
+                } else if (type === 'enter') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                    osc.start(now); osc.stop(now + 0.1);
+                }
+            }
         };
 
-        // --- BOOT SYSTEM ---
-        async function bootSystem() {
-            document.getElementById('start-overlay').style.display = 'none';
-            document.getElementById('boot-screen').style.display = 'flex';
-            playTone(400, 'sine', 0.1);
-
-            const logs = ["Kernel Init...", "Loading Python Modules...", "Loading JVM...", "Mounting HTML Engine...", "System Ready."];
-            const logDiv = document.getElementById('boot-log');
-            const bar = document.getElementById('progress-bar');
-
-            for (let i = 0; i < logs.length; i++) {
-                logDiv.innerHTML += `<div>> ${logs[i]}</div>`;
-                logDiv.scrollTop = logDiv.scrollHeight;
-                bar.style.width = `${(i + 1) / logs.length * 100}%`;
-                playTone(800 + (i*100), 'sawtooth', 0.03);
-                await new Promise(r => setTimeout(r, 250));
+        // --- FILE SYSTEM ---
+        const FS = {
+            files: {
+                'welcome.html': { type: 'web', content: '<h1>Bem-vindo ao KAUÃ_OS</h1><p>Clique em [NEW FILE] para começar.</p>' }
+            },
+            addFile(name, type, content) {
+                this.files[name] = { type, content };
+                UI.renderFiles();
             }
+        };
 
-            setTimeout(() => {
-                document.getElementById('boot-screen').style.display = 'none';
-                startMainInterface();
-            }, 500);
-        }
-
-        function startMainInterface() {
-            document.getElementById('main-grid').style.opacity = '1';
-            const panels = ['p-header', 'p-left', 'p-center', 'p-right', 'p-files', 'p-keyboard'];
-            panels.forEach((id, idx) => {
-                setTimeout(() => {
-                    const el = document.getElementById(id);
-                    if(el) { el.classList.add('power-on'); playTone(200, 'square', 0.05); }
-                }, idx * 100);
-            });
-            setTimeout(() => { document.getElementById('cmd-input').focus(); }, 1000);
-            startLoops();
-        }
-
-        // --- TERMINAL & INTERPRETER ---
-        const output = document.getElementById('terminal-output');
-        const input = document.getElementById('cmd-input');
-
-        input.addEventListener('keydown', (e) => {
-            const k = document.querySelector(`.key[data-key="${e.key.toUpperCase()}"]`);
-            if(k) { k.classList.add('active'); setTimeout(() => k.classList.remove('active'), 100); }
-            
-            if(e.key === 'Enter') {
-                const val = input.value.trim();
-                if(val) {
-                    print(`root@kaua:~$ ${val}`, 'cmd-line');
-                    processCommand(val);
+        // --- OS LOGIC ---
+        const OS = {
+            boot() {
+                document.getElementById('start-overlay').style.display = 'none';
+                document.getElementById('desktop-grid').style.opacity = '1';
+                AudioSys.init(); AudioSys.play('enter');
+                UI.init();
+                Term.print("Sistema Inicializado.", "text-green-500");
+            },
+            createFile(lang) {
+                const nameInput = document.getElementById('new-filename');
+                let name = nameInput.value.trim();
+                if(!name) name = "untitled";
+                
+                let ext = "", type = "console", content = "";
+                
+                switch(lang) {
+                    case 'html': 
+                        ext = ".html"; type = "web"; 
+                        content = "<h1>Novo Site</h1>\n<button onclick='alert(\"Funciona!\")'>Clique</button>"; 
+                        break;
+                    case 'python': 
+                        ext = ".py"; type = "console"; 
+                        content = "print('Executando Python...')\nval = 10 + 20\nprint('Resultado: ' + str(val))"; 
+                        break;
+                    case 'java': 
+                        ext = ".java"; type = "console"; 
+                        content = "public class Main {\n  public static void main(String[] args) {\n    System.out.println('Executando Java...');\n  }\n}"; 
+                        break;
+                    case 'cpp': 
+                        ext = ".cpp"; type = "console"; 
+                        content = "#include <iostream>\nusing namespace std;\nint main() {\n  cout << 'Executando C++...' << endl;\n  return 0;\n}"; 
+                        break;
+                    case 'csharp': 
+                        ext = ".cs"; type = "console"; 
+                        content = "using System;\nclass Program {\n  static void Main() {\n    Console.WriteLine('Executando C#...');\n  }\n}"; 
+                        break;
                 }
-                input.value = '';
-                playTone(300, 'sawtooth', 0.1);
+                
+                FS.addFile(name + ext, type, content);
+                document.getElementById('new-file-modal').style.display = 'none';
+                nameInput.value = "";
+                Canvas.open(name + ext);
+            }
+        };
+
+        // --- CANVAS (GEMINI STYLE) ---
+        const Canvas = {
+            el: document.getElementById('immersive-canvas'),
+            editor: document.getElementById('editor-area'),
+            web: document.getElementById('web-preview'),
+            console: document.getElementById('console-preview'),
+            logs: document.getElementById('console-logs'),
+            currentFile: null,
+
+            open(filename) {
+                const file = FS.files[filename];
+                if (!file) return Term.print("Arquivo não encontrado.", "text-red-500");
+                
+                this.currentFile = filename;
+                document.getElementById('canvas-filename').innerText = filename.toUpperCase();
+                this.editor.value = file.content;
+                this.el.style.display = 'flex';
+                document.getElementById('desktop-grid').style.filter = "blur(5px)";
+
+                if (file.type === 'web') {
+                    this.web.style.display = 'block';
+                    this.console.style.display = 'none';
+                    this.runWeb();
+                } else {
+                    this.web.style.display = 'none';
+                    this.console.style.display = 'block';
+                    this.logs.innerHTML = "<div class='text-gray-500'>Pronto para executar...</div>";
+                }
+                AudioSys.play('enter');
+            },
+            close() {
+                this.el.style.display = 'none';
+                document.getElementById('desktop-grid').style.filter = "none";
+                if(this.currentFile) FS.files[this.currentFile].content = this.editor.value;
+            },
+            run() {
+                AudioSys.play('enter');
+                const content = this.editor.value;
+                const file = FS.files[this.currentFile];
+                file.content = content; // Auto-save
+
+                if (file.type === 'web') this.runWeb();
+                else this.runConsole(content);
+            },
+            runWeb() {
+                this.web.srcdoc = this.editor.value;
+            },
+            runConsole(code) {
+                this.logs.innerHTML = "";
+                const lines = code.split('\n');
+                lines.forEach((line, i) => {
+                    // Simulação de Output para várias linguagens
+                    let out = null;
+                    // Python
+                    if (line.match(/print\s*\((.*)\)/)) out = line.match(/print\s*\((.*)\)/)[1];
+                    // Java / C#
+                    else if (line.match(/(System\.out\.println|Console\.WriteLine)\s*\((.*)\)/)) out = line.match(/(System\.out\.println|Console\.WriteLine)\s*\((.*)\)/)[2];
+                    // C++
+                    else if (line.match(/cout\s*<<\s*(.*)/)) out = line.match(/cout\s*<<\s*(.*)/)[1].replace('<< endl', '').replace(';', '');
+
+                    if (out) {
+                        out = out.replace(/["']/g, ''); // Remove aspas
+                        setTimeout(() => {
+                            const d = document.createElement('div');
+                            d.className = "text-green-400 mb-1 border-l-2 border-green-800 pl-2";
+                            d.innerText = "> " + out;
+                            this.logs.appendChild(d);
+                        }, i * 200);
+                    }
+                });
+                if(!this.logs.hasChildNodes()) {
+                     this.logs.innerHTML = "<div class='text-yellow-500'>Compilação simulada concluída. (Sem saída detectada)</div>";
+                }
+            }
+        };
+
+        // --- UI & KEYBOARD FIX ---
+        const UI = {
+            init() {
+                this.renderFiles();
+                this.renderKeyboard();
+                this.startGlobe();
+            },
+            renderFiles() {
+                const g = document.getElementById('file-grid');
+                g.innerHTML = '';
+                Object.keys(FS.files).forEach(f => {
+                    const div = document.createElement('div');
+                    div.className = "flex flex-col items-center cursor-pointer hover:bg-white/10 p-2 rounded text-[10px] text-gray-400";
+                    let icon = 'file-code';
+                    if(f.endsWith('.html')) icon = 'globe';
+                    else if(f.endsWith('.py') || f.endsWith('.java')) icon = 'terminal';
+                    
+                    div.innerHTML = `<i data-lucide="${icon}" class="mb-1 w-5 h-5"></i>${f}`;
+                    div.onclick = () => Canvas.open(f);
+                    g.appendChild(div);
+                });
+                lucide.createIcons();
+            },
+            renderKeyboard() {
+                const k = document.getElementById('kb-container');
+                const rows = ["1234567890", "QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
+                k.innerHTML = '';
+                rows.forEach(r => {
+                    const d = document.createElement('div');
+                    d.className = "flex justify-center gap-1 w-full mb-1";
+                    r.split('').forEach(char => {
+                        const key = document.createElement('div');
+                        key.className = "key flex-1 h-8"; key.innerText = char;
+                        key.dataset.key = char;
+                        key.onmousedown = () => UI.triggerKey(char);
+                        d.appendChild(key);
+                    });
+                    k.appendChild(d);
+                });
+                const sp = document.createElement('div'); sp.className="flex justify-center";
+                sp.innerHTML=`<div class="key w-1/2 h-8" data-key="SPACE" onclick="UI.triggerKey(' ')">SPACE</div>`;
+                k.appendChild(sp);
+            },
+            // FIX: Feedback visual garantido
+            triggerKey(char) {
+                const input = document.getElementById('cmd-input');
+                const keyEl = document.querySelector(`.key[data-key="${char === ' ' ? 'SPACE' : char}"]`);
+                
+                if (keyEl) {
+                    keyEl.classList.add('active');
+                    setTimeout(() => keyEl.classList.remove('active'), 150);
+                }
+                
+                input.value += char;
+                input.focus();
+                AudioSys.play('click');
+            },
+            startGlobe() {
+                const cvs = document.getElementById('globe-canvas');
+                const ctx = cvs.getContext('2d');
+                let t = 0;
+                function loop() {
+                    if(!cvs.parentElement) return;
+                    cvs.width = cvs.parentElement.offsetWidth;
+                    cvs.height = cvs.parentElement.offsetHeight;
+                    ctx.fillStyle = 'black'; ctx.fillRect(0,0,cvs.width,cvs.height);
+                    t+=0.02;
+                    ctx.fillStyle = '#00ff41';
+                    const cx=cvs.width/2, cy=cvs.height/2;
+                    for(let i=0; i<60; i++) {
+                        const a = (i/60)*6.28 + t;
+                        const x = Math.cos(a)*40; const y = Math.sin(a)*10;
+                        ctx.beginPath(); ctx.arc(cx+x, cy+y, 1.5, 0, 6.28); ctx.fill();
+                    }
+                    requestAnimationFrame(loop);
+                }
+                loop();
+            }
+        };
+
+        // --- TERMINAL ---
+        const Term = {
+            print(msg, cls='') {
+                const d = document.createElement('div'); d.className=cls; d.innerHTML=msg;
+                const out = document.getElementById('term-out');
+                out.appendChild(d); out.scrollTop = out.scrollHeight;
+            }
+        };
+
+        // --- EVENTS ---
+        document.getElementById('cmd-input').addEventListener('keydown', e => {
+            if(e.key === 'Enter') {
+                const val = e.target.value.trim();
+                Term.print(`root@kaua:~$ ${val}`, 'cmd-line');
+                const cmd = val.split(' ');
+                if(cmd[0] === 'code' && cmd[1]) Canvas.open(cmd[1]);
+                else if(cmd[0] === 'ls') Object.keys(FS.files).forEach(f => Term.print(f, 'text-blue-400'));
+                else if(cmd[0] === 'clear') document.getElementById('term-out').innerHTML = '';
+                else Term.print("Comando inválido.", "text-gray-500");
+                e.target.value = '';
+                AudioSys.play('enter');
             } else {
-                playTone(800, 'triangle', 0.02);
+                // Feedback visual ao digitar no teclado físico
+                const char = e.key.toUpperCase();
+                const keyEl = document.querySelector(`.key[data-key="${char === ' ' ? 'SPACE' : char}"]`);
+                if (keyEl) {
+                    keyEl.classList.add('active');
+                    setTimeout(() => keyEl.classList.remove('active'), 150);
+                }
+                AudioSys.play('click');
             }
         });
 
-        function print(text, type = '') {
-            const div = document.createElement('div');
-            div.className = type;
-            div.innerText = text;
-            output.appendChild(div);
-            output.scrollTop = output.scrollHeight;
-        }
-
-        function processCommand(raw) {
-            const parts = raw.split(' ');
-            const cmd = parts[0].toLowerCase();
-            const arg = parts[1];
-
-            switch(cmd) {
-                case 'help':
-                    print("COMANDOS: help, wiki, clear, ls, cat, python, java, render");
-                    break;
-                case 'wiki':
-                    openWiki();
-                    print("Abrindo Wiki...", 'info');
-                    break;
-                case 'clear':
-                    output.innerHTML = '';
-                    break;
-                case 'ls':
-                    Object.keys(virtualFS).forEach(f => print(f, 'info'));
-                    break;
-                case 'cat':
-                    if(virtualFS[arg]) print(virtualFS[arg]);
-                    else print("Arquivo não encontrado.", 'error');
-                    break;
-                case 'python':
-                    runInterpreter('python', arg);
-                    break;
-                case 'java':
-                    runInterpreter('java', arg);
-                    break;
-                case 'render':
-                    runInterpreter('html', arg);
-                    break;
-                default:
-                    print(`Comando desconhecido: ${cmd}`, 'error');
-            }
-        }
-
-        function runInterpreter(lang, filename) {
-            if(!filename) { print(`Erro: Especifique um arquivo (ex: ${lang} teste.${lang === 'python'?'py':(lang==='java'?'java':'html')})`, 'error'); return; }
-            
-            const code = virtualFS[filename];
-            if(!code) { print(`Arquivo ${filename} não encontrado.`, 'error'); return; }
-
-            print(`[${lang.toUpperCase()}] Executing ${filename}...`, 'warning');
-
-            setTimeout(() => {
-                if (lang === 'python') {
-                    // Simulação Básica de Python
-                    const lines = code.split('\n');
-                    lines.forEach(line => {
-                        if (line.includes('print(')) {
-                            const match = line.match(/print\((.*)\)/);
-                            if (match) {
-                                let content = match[1].replace(/"/g, '').replace(/'/g, '');
-                                // Detecção simplificada de soma str(x+y) do exemplo
-                                if(content.includes('str(x+y)')) content = "Soma de X + Y é: 30"; 
-                                print(content, 'success');
-                            }
-                        }
-                    });
-                } else if (lang === 'java') {
-                    // Simulação Básica de Java
-                    const lines = code.split('\n');
-                    lines.forEach(line => {
-                        if (line.includes('System.out.println')) {
-                            const match = line.match(/println\("(.*)"\)/);
-                            if (match) print(match[1], 'success');
-                        }
-                    });
-                } else if (lang === 'html') {
-                    // Renderizador HTML
-                    document.getElementById('render-content').innerHTML = code;
-                    openModal('render-modal');
-                    print("Janela de renderização aberta.", 'success');
-                }
-            }, 500);
-        }
-
-        // --- MODALS ---
-        function openWiki() { openModal('wiki-modal'); }
-        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-
-        // --- VISUAIS ---
-        function startLoops() {
-            renderKeyboard();
-            renderIcons();
-            setInterval(updateClock, 1000);
-            drawGlobe();
-        }
-
-        function renderKeyboard() {
-            const layout = ["1234567890", "QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
-            const container = document.getElementById('keyboard-container');
-            container.innerHTML = '';
-            layout.forEach(row => {
-                const div = document.createElement('div');
-                div.className = 'key-row';
-                row.split('').forEach(char => {
-                    const k = document.createElement('div');
-                    k.className = 'key';
-                    k.innerText = char;
-                    k.dataset.key = char;
-                    k.addEventListener('mousedown', () => triggerKey(char));
-                    div.appendChild(k);
-                });
-                container.appendChild(div);
-            });
-            // Spacebar
-            const space = document.createElement('div');
-            space.className = 'key-row';
-            space.innerHTML = `<div class="key" style="width:50%" data-key="SPACE" onclick="triggerKey(' ')">SPACE</div>`;
-            container.appendChild(space);
-        }
-
-        function triggerKey(char) {
-            const input = document.getElementById('cmd-input');
-            const k = document.querySelector(`.key[data-key="${char === ' ' ? 'SPACE' : char}"]`);
-            if(k) { k.classList.add('active'); playTone(600, 'square', 0.03); setTimeout(() => k.classList.remove('active'), 100); }
-            input.value += char;
-            input.focus();
-        }
-
-        function renderIcons() {
-            const grid = document.getElementById('file-grid');
-            if(!grid) return;
-            grid.innerHTML = '';
-            Object.keys(virtualFS).forEach(f => {
-                let icon = 'file';
-                if(f.endsWith('.py')) icon = 'file-code';
-                if(f.endsWith('.java')) icon = 'coffee';
-                if(f.endsWith('.html')) icon = 'globe';
-                
-                const el = document.createElement('div');
-                el.className = 'text-center text-[10px] cursor-pointer hover:bg-white/10 p-1 rounded group';
-                el.innerHTML = `<i data-lucide="${icon}" class="mx-auto mb-1 group-hover:text-green-400"></i>${f}`;
-                el.onclick = () => {
-                    document.getElementById('cmd-input').value = f.endsWith('.html') ? `render ${f}` : (f.endsWith('.py') ? `python ${f}` : (f.endsWith('.java') ? `java ${f}` : `cat ${f}`));
-                    document.getElementById('cmd-input').focus();
-                };
-                grid.appendChild(el);
-            });
-            lucide.createIcons();
-        }
-
-        function updateClock() {
+        // Loop Stats
+        setInterval(() => {
             document.getElementById('clock').innerText = new Date().toLocaleTimeString();
-            // CPU Sim
-            const cpu = Math.floor(Math.random() * 40 + 10);
-            if(document.getElementById('cpu-val')) {
-                document.getElementById('cpu-val').innerText = cpu + "%";
-                document.getElementById('cpu-bar').style.width = cpu + "%";
-            }
-        }
+            document.getElementById('cpu-val').innerText = Math.floor(Math.random()*30+10)+"%";
+        }, 1000);
 
-        function drawGlobe() {
-            const canvas = document.getElementById('globe-canvas');
-            if(!canvas) return;
-            const ctx = canvas.getContext('2d');
-            
-            function resize() {
-                canvas.width = canvas.parentElement.offsetWidth;
-                canvas.height = canvas.parentElement.offsetHeight;
-            }
-            resize();
-            window.addEventListener('resize', resize);
-
-            let time = 0;
-            function animate() {
-                ctx.fillStyle = 'black';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                // Globe Grid Effect
-                const cx = canvas.width / 2;
-                const cy = canvas.height / 2;
-                const r = Math.min(cx, cy) * 0.7;
-                
-                ctx.strokeStyle = '#004400';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.arc(cx, cy, r, 0, Math.PI * 2);
-                ctx.stroke();
-
-                time += 0.005;
-                
-                // Dots
-                ctx.fillStyle = '#00ff41';
-                for(let i=0; i<150; i++) {
-                    const lat = Math.acos(1 - 2 * (i / 150));
-                    const lon = Math.PI * 3 * i + time; // Rotate
-                    
-                    const x = r * Math.sin(lat) * Math.cos(lon);
-                    const z = r * Math.sin(lat) * Math.sin(lon);
-                    const y = r * Math.cos(lat);
-                    
-                    if (z > 0) { // Only draw front
-                        const scale = 200 / (200 + z);
-                        const alpha = z / r;
-                        ctx.globalAlpha = alpha;
-                        ctx.beginPath();
-                        ctx.arc(cx + x, cy + y, 1.5, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
-                }
-                ctx.globalAlpha = 1;
-                requestAnimationFrame(animate);
-            }
-            animate();
-        }
-
-        function toggleFullScreen() {
-             try {
-                if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen().catch(() => {});
-                } else {
-                    if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
-                }
-            } catch (e) {}
-        }
     </script>
 </body>
 </html>
